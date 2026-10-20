@@ -32,14 +32,23 @@ interface offers, through the same API.
 
 ## Installation
 
-1. [HACS](https://hacs.xyz) → ⋮ → **Custom repositories** →
-   `https://github.com/Florian-BARRE/HA-HyperHDR`, type **Integration**.
-2. Open **HyperHDR** in HACS. While only betas exist: ⋮ → **Redownload** →
-   turn on **Show beta versions**, pick the latest. Then **Download**.
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Florian-BARRE&repository=HA-HyperHDR&category=integration)
+
+1. Click the button above: it opens HACS in your Home Assistant on this
+   repository and offers to add it (answer **Add**).
+   Without the button: HACS → ⋮ (top right) → **Custom repositories** →
+   repository `https://github.com/Florian-BARRE/HA-HyperHDR`, type
+   **Integration** → **Add**.
+2. On the HyperHDR page in HACS, click **Download** (bottom right). For a
+   beta: ⋮ → **Redownload** → turn on **Show beta versions**, pick the
+   latest → **Download**.
 3. Restart Home Assistant.
-4. _Settings → Devices & services_: HyperHDR is usually discovered on the
-   network; otherwise _Add integration → HyperHDR_ with the address of the
-   machine and the web port (8090).
+4. HyperHDR is usually discovered on the network (_Settings → Devices &
+   services_). Otherwise:
+
+   [![Open your Home Assistant instance and start setting up HyperHDR.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=ha_hyperhdr)
+
+   with the address of the machine and the web port (8090).
 
 **Admin password.** It unlocks the settings, the captured picture and the
 configuration services. Left empty, HyperHDR's default password is tried;
