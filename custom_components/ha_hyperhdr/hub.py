@@ -39,6 +39,8 @@ from .const import (
     DEFAULT_PRIORITY,
     DEFAULT_STREAM_FPS,
     DOMAIN,
+    HOST_HEALTH_FIRST_DELAY,
+    HOST_HEALTH_INTERVAL,
     RECONNECT_DELAYS,
 )
 from .state import InstanceState, ServerState
@@ -109,6 +111,7 @@ class InstanceConnection:
             name=f"{DOMAIN} {hub.host} instance {index}",
         )
         self._reconnect: asyncio.Task[None] | None = None
+        self._host_health: asyncio.Task[None] | None = None
         self._closing = False
         self._led_listeners: list[Callable[[list[int]], None]] = []
         self.led_stream = _Stream(
@@ -131,6 +134,7 @@ class InstanceConnection:
         self._closing = True
         if self._reconnect:
             self._reconnect.cancel()
+        self._stop_host_health()
         await self.client.close()
 
     async def _load(self) -> None:
@@ -150,6 +154,7 @@ class InstanceConnection:
                 self.hub.server.settings = dict(settings)
         if self.primary and self.hub.performance:
             await client.subscribe([PERFORMANCE_SUBSCRIPTION])
+            self._start_host_health()
         await self.led_stream.restart()
         if self.primary:
             await self.hub.image_stream.restart()
@@ -172,6 +177,34 @@ class InstanceConnection:
         if changed:
             self.coordinator.async_set_updated_data(self.state)
 
+    def _start_host_health(self) -> None:
+        self._stop_host_health()
+        self._host_health = self.hub.entry.async_create_background_task(
+            self.hub.hass, self._host_health_loop(), f"{DOMAIN} host health {self.hub.host}"
+        )
+
+    def _stop_host_health(self) -> None:
+        if self._host_health is not None:
+            self._host_health.cancel()
+            self._host_health = None
+
+    async def _host_health_loop(self) -> None:
+        """HyperHDR measures the host only when asked: asks every 30 s.
+
+        The first request starts the CPU measure, the second, shortly after,
+        brings the load; the answers arrive as `performance-update` messages.
+        Ends with the connection: a reconnection starts it again.
+        """
+        delay = HOST_HEALTH_FIRST_DELAY
+        while not self._closing:
+            try:
+                await self.client.performance_counters()
+            except HyperHDRError as err:
+                _LOGGER.debug("Host health request to %s failed: %s", self.hub.host, err)
+                return
+            await asyncio.sleep(delay)
+            delay = HOST_HEALTH_INTERVAL
+
     def add_led_listener(self, listener: Callable[[list[int]], None]) -> Callable[[], None]:
         self._led_listeners.append(listener)
         return lambda: self._led_listeners.remove(listener)
@@ -181,6 +214,7 @@ class InstanceConnection:
         if self._closing:
             return
         _LOGGER.info("Connection to HyperHDR %s (instance %s) lost", self.hub.host, self.index)
+        self._stop_host_health()
         self.coordinator.async_set_update_error(UpdateFailed("Connection lost"))
         if self.primary:
             self.hub.server_coordinator.async_set_update_error(UpdateFailed("Connection lost"))

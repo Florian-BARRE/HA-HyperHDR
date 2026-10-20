@@ -244,3 +244,24 @@ async def test_second_instance(hass: HomeAssistant) -> None:
             await asyncio.sleep(0.5)
             await admin.request("instance", subcommand="deleteInstance", instance=index)
             await admin.close()
+
+
+async def test_host_health(hass: HomeAssistant) -> None:
+    """HyperHDR measures the host only when asked: the CPU load and the memory
+    fill in a few seconds after the setup."""
+    entry = await _setup(hass)
+    registry = er.async_get(hass)
+    ids = {
+        item.unique_id.split("_", 1)[1]: item.entity_id
+        for item in er.async_entries_for_config_entry(registry, entry.entry_id)
+    }
+    for key in ("cpu", "memory"):
+        entity_id = ids[key]
+        for _ in range(100):
+            state = hass.states.get(entity_id)
+            if state and state.state not in ("unknown", "unavailable"):
+                break
+            await asyncio.sleep(0.1)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert 0 <= float(state.state) <= 100, f"{entity_id} is {state.state}"

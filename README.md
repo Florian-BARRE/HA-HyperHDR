@@ -23,8 +23,9 @@ interface offers, through the same API.
 
 - **One WebSocket per instance**, kept open. HyperHDR pushes every change
   (components, sources, adjustments, settings, instances); nothing is polled.
-- **Host health** (CPU, temperature, memory, undervoltage) and frame rates
-  come with HyperHDR's own performance updates, once a minute.
+- **Host health** (CPU, temperature, memory, undervoltage): HyperHDR measures
+  it only when asked, so the integration asks every 30 s (its web interface
+  asks every second). Frame rates are pushed by HyperHDR, once a minute.
 - **The cameras stream only while someone looks.** The captured picture
   arrives as JPEG from HyperHDR and is passed through without decoding; the
   stream stops 15 s after the last viewer.
@@ -69,7 +70,7 @@ marked _off_ are disabled by default; _admin_ ones need the admin password.
 | ---------------------------------------- | ------------- | ---------------------------------------------- |
 | Connected                                | binary sensor | Stays available when the connection drops      |
 | Undervoltage                             | binary sensor | Raspberry Pi power supply                      |
-| CPU, CPU temperature, Memory             | sensors       | From HyperHDR's performance updates            |
+| CPU, CPU temperature, Memory             | sensors       | Every 30 s                                     |
 | Capture rate                             | sensor (fps)  |                                                |
 | Grabber, Video mode                      | sensors       | Current device and resolution                  |
 | Version                                  | sensor        |                                                |
@@ -137,7 +138,7 @@ data:
 | Option                       | Default  | What it does                                                 |
 | ---------------------------- | -------- | ------------------------------------------------------------ |
 | Priority of Home Assistant   | 128      | Priority of colors and effects set from Home Assistant       |
-| Host health and frame rates  | on       | Subscribes to HyperHDR's performance updates                 |
+| Host health and frame rates  | on       | Host measured every 30 s, frame rates pushed every minute    |
 | Captured picture rate        | 10 fps   | Frame rate of the captured picture while it is viewed        |
 | LED colors refresh           | 200 ms   | Refresh of the LED colors camera while it is viewed          |
 
