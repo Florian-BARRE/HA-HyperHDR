@@ -11,5 +11,5 @@
   "loggers": ["custom_components.ha_hyperhdr"],
   "requirements": [],
   "ssdp": [{ "st": "urn:hyperhdr.eu:device:basic:1" }, { "manufacturer": "HyperHDR Open Source Ambient Lighting" }],
-  "version": "0.1.0b1"
+  "version": "0.1.0b2"
 }

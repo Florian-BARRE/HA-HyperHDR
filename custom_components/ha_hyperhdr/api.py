@@ -217,6 +217,14 @@ class HyperHDRClient:
         """Subscriptions that bring no state (performance) are sent on their own."""
         await self.request("serverinfo", subscribe=subscriptions)
 
+    async def performance_counters(self) -> None:
+        """Asks for the host's CPU, memory, temperature and undervoltage.
+
+        HyperHDR measures them only when asked (its web interface asks every
+        second); they come back as `performance-update` messages.
+        """
+        await self.request("performance-counters", subcommand="resources")
+
     async def sys_info(self) -> dict[str, Any]:
         return (await self.request("sysinfo")).get("info") or {}
 

@@ -24,6 +24,11 @@ MIN_VERSION: Final = (21, 0)
 
 #: Seconds before reconnecting, growing up to the last one.
 RECONNECT_DELAYS: Final = (1, 2, 5, 10, 30, 60)
+#: HyperHDR measures the host only when asked: seconds between two requests.
+HOST_HEALTH_INTERVAL: Final = 30
+#: The CPU load is the difference between two readings: the first one only
+#: starts the measure, the second one comes this many seconds later.
+HOST_HEALTH_FIRST_DELAY: Final = 2
 #: A stream nobody looks at stops after this many seconds.
 STREAM_IDLE: Final = 15
 
