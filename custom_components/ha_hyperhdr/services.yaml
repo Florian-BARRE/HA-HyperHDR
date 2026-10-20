@@ -1,0 +1,102 @@
+set_color:
+  target:
+    entity:
+      integration: ha_hyperhdr
+      domain: light
+  fields:
+    rgb_color:
+      required: true
+      example: [255, 100, 0]
+      selector:
+        color_rgb:
+    priority:
+      selector:
+        number:
+          min: 1
+          max: 253
+          mode: box
+    duration:
+      selector:
+        number:
+          min: 0
+          max: 86400000
+          step: 100
+          unit_of_measurement: ms
+          mode: box
+set_effect:
+  target:
+    entity:
+      integration: ha_hyperhdr
+      domain: light
+  fields:
+    effect:
+      required: true
+      example: Rainbow swirl fast
+      selector:
+        text:
+    priority:
+      selector:
+        number:
+          min: 1
+          max: 253
+          mode: box
+    duration:
+      selector:
+        number:
+          min: 0
+          max: 86400000
+          step: 100
+          unit_of_measurement: ms
+          mode: box
+clear:
+  target:
+    entity:
+      integration: ha_hyperhdr
+      domain: light
+  fields:
+    priority:
+      selector:
+        number:
+          min: 1
+          max: 253
+          mode: box
+get_config:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: ha_hyperhdr
+    instance:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+set_config:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: ha_hyperhdr
+    instance:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    config:
+      required: true
+      example: '{"smoothing": {"time_ms": 200}}'
+      selector:
+        object:
+backup:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: ha_hyperhdr
