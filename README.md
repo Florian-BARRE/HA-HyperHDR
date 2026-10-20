@@ -154,4 +154,5 @@ against it.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). The HyperHDR icon in `brand/` is HyperHDR's own
+([awawa-dev/HyperHDR](https://github.com/awawa-dev/HyperHDR), MIT).
