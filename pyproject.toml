@@ -1,0 +1,22 @@
+[project]
+name = "ha-hyperhdr"
+version = "0.1.0b1"
+description = "HyperHDR integration for Home Assistant"
+requires-python = ">=3.13"
+license = "MIT"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "I", "SIM", "ASYNC", "RUF"]
+ignore = ["RUF012", "ASYNC109"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["custom_components"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]

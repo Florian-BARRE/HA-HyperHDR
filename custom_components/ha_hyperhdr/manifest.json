@@ -1,0 +1,15 @@
+{
+  "domain": "ha_hyperhdr",
+  "name": "HyperHDR",
+  "codeowners": ["@Florian-BARRE"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Florian-BARRE/HA-HyperHDR",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Florian-BARRE/HA-HyperHDR/issues",
+  "loggers": ["custom_components.ha_hyperhdr"],
+  "requirements": [],
+  "ssdp": [{ "st": "urn:hyperhdr.eu:device:basic:1" }, { "manufacturer": "HyperHDR Open Source Ambient Lighting" }],
+  "version": "0.1.0b1"
+}

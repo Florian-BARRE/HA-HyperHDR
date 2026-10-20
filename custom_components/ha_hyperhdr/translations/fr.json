@@ -1,0 +1,404 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "HyperHDR",
+        "description": "Adresse du serveur HyperHDR. Le mot de passe admin débloque les réglages, l’image capturée et la configuration ; sans lui, le mot de passe par défaut d’HyperHDR est essayé.",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "password": "Mot de passe admin"
+        },
+        "data_description": {
+          "host": "Adresse IP ou nom de la machine qui fait tourner HyperHDR",
+          "port": "Port du serveur web (8090 par défaut)",
+          "password": "Optionnel : vide, le mot de passe par défaut d’HyperHDR est essayé"
+        }
+      },
+      "discovery_confirm": {
+        "title": "HyperHDR trouvé",
+        "description": "Ajouter {name} ({host}) ?",
+        "data": {
+          "password": "Mot de passe admin"
+        },
+        "data_description": {
+          "password": "Optionnel : vide, le mot de passe par défaut d’HyperHDR est essayé"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Mot de passe HyperHDR",
+        "description": "HyperHDR sur {host} refuse les identifiants enregistrés (le mot de passe a changé ?).",
+        "data": {
+          "password": "Mot de passe admin"
+        }
+      },
+      "reconfigure": {
+        "title": "HyperHDR",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "password": "Mot de passe admin"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de joindre HyperHDR",
+      "invalid_auth": "Mot de passe incorrect",
+      "auth_required": "Ce HyperHDR demande une authentification : saisis son mot de passe admin",
+      "too_old": "HyperHDR 21 ou plus récent est nécessaire",
+      "unknown": "Erreur inattendue"
+    },
+    "abort": {
+      "already_configured": "Ce HyperHDR est déjà configuré",
+      "reauth_successful": "Identifiants mis à jour",
+      "reconfigure_successful": "HyperHDR mis à jour",
+      "wrong_server": "C’est un autre serveur HyperHDR",
+      "cannot_connect": "Impossible de joindre HyperHDR"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options HyperHDR",
+        "data": {
+          "priority": "Priorité de Home Assistant",
+          "performance": "Santé de la machine et fréquences d’images",
+          "stream_fps": "Fréquence de l’image capturée",
+          "led_interval": "Rafraîchissement des couleurs des LEDs"
+        },
+        "data_description": {
+          "priority": "Les couleurs et effets lancés depuis Home Assistant l’utilisent ; plus petit = prioritaire (la capture est à 240)",
+          "performance": "CPU, température, mémoire, sous-tension et fps, envoyés par HyperHDR chaque minute",
+          "stream_fps": "Pendant qu’on regarde la caméra",
+          "led_interval": "Pendant qu’on regarde la caméra des LEDs"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connecté"
+      },
+      "undervoltage": {
+        "name": "Sous-tension"
+      }
+    },
+    "button": {
+      "clear": {
+        "name": "Rendre à la capture"
+      },
+      "clear_all": {
+        "name": "Effacer toutes les sources"
+      }
+    },
+    "camera": {
+      "capture": {
+        "name": "Image capturée"
+      },
+      "led_colors": {
+        "name": "Couleurs des LEDs"
+      }
+    },
+    "number": {
+      "brightness_gain": {
+        "name": "Luminosité"
+      },
+      "saturation_gain": {
+        "name": "Saturation"
+      },
+      "gamma": {
+        "name": "Gamma"
+      },
+      "backlight": {
+        "name": "Seuil de rétroéclairage"
+      },
+      "power_limit": {
+        "name": "Limite de puissance"
+      },
+      "scale_output": {
+        "name": "Échelle de sortie"
+      },
+      "smoothing_time": {
+        "name": "Durée du lissage"
+      },
+      "smoothing_frequency": {
+        "name": "Fréquence du lissage"
+      },
+      "blackborder_threshold": {
+        "name": "Seuil des bandes noires"
+      },
+      "grabber_brightness": {
+        "name": "Luminosité du grabber"
+      },
+      "grabber_contrast": {
+        "name": "Contraste du grabber"
+      },
+      "grabber_saturation": {
+        "name": "Saturation du grabber"
+      },
+      "grabber_hue": {
+        "name": "Teinte du grabber"
+      },
+      "crop_top": {
+        "name": "Recadrage haut"
+      },
+      "crop_bottom": {
+        "name": "Recadrage bas"
+      },
+      "crop_left": {
+        "name": "Recadrage gauche"
+      },
+      "crop_right": {
+        "name": "Recadrage droite"
+      }
+    },
+    "select": {
+      "source": {
+        "name": "Source",
+        "state": {
+          "auto": "Automatique"
+        }
+      },
+      "processing": {
+        "name": "Traitement",
+        "state": {
+          "advanced": "Avancé",
+          "multicolor_mean": "Moyenne multicolore",
+          "unicolor_mean": "Moyenne unicolore",
+          "weighted": "Pondéré"
+        }
+      },
+      "color_temperature": {
+        "name": "Température de couleur",
+        "state": {
+          "disabled": "Désactivée",
+          "cold": "Froide",
+          "neutral": "Neutre",
+          "warm": "Chaude",
+          "custom": "Personnalisée"
+        }
+      },
+      "smoothing_type": {
+        "name": "Type de lissage",
+        "state": {
+          "stepper": "Stepper",
+          "yuvinterpolator": "Interpolation YUV",
+          "rgbinterpolator": "Interpolation RVB",
+          "hybridinterpolator": "Interpolation hybride",
+          "hybridrgbinterpolator": "Interpolation hybride RVB",
+          "exponentialinterpolator": "Interpolation exponentielle"
+        }
+      },
+      "blackborder_mode": {
+        "name": "Mode des bandes noires",
+        "state": {
+          "default": "Par défaut",
+          "classic": "Classique",
+          "osd": "OSD",
+          "letterbox": "Letterbox"
+        }
+      }
+    },
+    "sensor": {
+      "cpu": {
+        "name": "Processeur"
+      },
+      "cpu_temperature": {
+        "name": "Température du processeur"
+      },
+      "memory": {
+        "name": "Mémoire"
+      },
+      "capture_fps": {
+        "name": "Fréquence de capture"
+      },
+      "grabber": {
+        "name": "Grabber"
+      },
+      "video_mode": {
+        "name": "Mode vidéo"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "output_fps": {
+        "name": "Fréquence de sortie"
+      },
+      "led_fps": {
+        "name": "Fréquence des LEDs"
+      },
+      "led_count": {
+        "name": "LEDs"
+      },
+      "average_color": {
+        "name": "Couleur moyenne"
+      },
+      "visible_source": {
+        "name": "Source affichée",
+        "state": {
+          "none": "Aucune",
+          "videograbber": "Capture vidéo",
+          "systemgrabber": "Capture système",
+          "color": "Couleur",
+          "effect": "Effet",
+          "image": "Image",
+          "flatbufserver": "Flatbuffers",
+          "protoserver": "Protobuf",
+          "rawudpserver": "UDP",
+          "cec": "CEC",
+          "unknown": "Autre"
+        }
+      }
+    },
+    "switch": {
+      "led_output": {
+        "name": "Sortie LED"
+      },
+      "video_capture": {
+        "name": "Capture vidéo"
+      },
+      "system_capture": {
+        "name": "Capture système"
+      },
+      "smoothing": {
+        "name": "Lissage"
+      },
+      "black_border": {
+        "name": "Détection des bandes noires"
+      },
+      "forwarder": {
+        "name": "Transfert"
+      },
+      "hdr": {
+        "name": "Tone mapping HDR"
+      },
+      "continuous_output": {
+        "name": "Sortie continue"
+      },
+      "anti_flickering": {
+        "name": "Filtre anti-scintillement"
+      },
+      "background_effect": {
+        "name": "Effet d’arrière-plan"
+      },
+      "boot_effect": {
+        "name": "Effet au démarrage"
+      },
+      "auto_tone_mapping": {
+        "name": "Tone mapping automatique"
+      },
+      "signal_detection": {
+        "name": "Détection du signal"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "HyperHDR a refusé {command} : {error}"
+    },
+    "not_connected": {
+      "message": "HyperHDR n’est pas connecté : {error}"
+    },
+    "unknown_source": {
+      "message": "Source inconnue : {source}"
+    },
+    "entry_not_loaded": {
+      "message": "Ce HyperHDR n’est pas chargé"
+    },
+    "admin_required": {
+      "message": "Il faut le mot de passe admin d’HyperHDR (reconfigure l’intégration)"
+    }
+  },
+  "services": {
+    "set_color": {
+      "name": "Afficher une couleur",
+      "description": "Affiche une couleur sur les LEDs, au-dessus de la capture.",
+      "fields": {
+        "rgb_color": {
+          "name": "Couleur",
+          "description": "Rouge, vert, bleu"
+        },
+        "priority": {
+          "name": "Priorité",
+          "description": "Plus petit = prioritaire ; celle de l’intégration par défaut"
+        },
+        "duration": {
+          "name": "Durée",
+          "description": "Millisecondes ; jusqu’à effacement si vide"
+        }
+      }
+    },
+    "set_effect": {
+      "name": "Lancer un effet",
+      "description": "Lance un effet HyperHDR, au-dessus de la capture.",
+      "fields": {
+        "effect": {
+          "name": "Effet",
+          "description": "Nom de l’effet"
+        },
+        "priority": {
+          "name": "Priorité",
+          "description": "Plus petit = prioritaire ; celle de l’intégration par défaut"
+        },
+        "duration": {
+          "name": "Durée",
+          "description": "Millisecondes ; jusqu’à effacement si vide"
+        }
+      }
+    },
+    "clear": {
+      "name": "Effacer",
+      "description": "Retire une couleur ou un effet : la capture réapparaît.",
+      "fields": {
+        "priority": {
+          "name": "Priorité",
+          "description": "Celle de l’intégration par défaut"
+        }
+      }
+    },
+    "get_config": {
+      "name": "Lire la configuration",
+      "description": "Renvoie toute la configuration HyperHDR d’une instance (admin).",
+      "fields": {
+        "config_entry_id": {
+          "name": "HyperHDR",
+          "description": "Le serveur HyperHDR"
+        },
+        "instance": {
+          "name": "Instance",
+          "description": "0 pour la première"
+        }
+      }
+    },
+    "set_config": {
+      "name": "Modifier la configuration",
+      "description": "Écrit des réglages HyperHDR ; une section peut être partielle, HyperHDR la fusionne (admin).",
+      "fields": {
+        "config_entry_id": {
+          "name": "HyperHDR",
+          "description": "Le serveur HyperHDR"
+        },
+        "instance": {
+          "name": "Instance",
+          "description": "0 pour la première"
+        },
+        "config": {
+          "name": "Configuration",
+          "description": "Sections et valeurs, comme dans get_config"
+        }
+      }
+    },
+    "backup": {
+      "name": "Sauvegarde",
+      "description": "Renvoie la sauvegarde complète d’HyperHDR (admin).",
+      "fields": {
+        "config_entry_id": {
+          "name": "HyperHDR",
+          "description": "Le serveur HyperHDR"
+        }
+      }
+    }
+  }
+}

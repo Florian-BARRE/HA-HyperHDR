@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  HYPERHDR_VERSION: "22.0.0"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Python and dependencies
+        run: |
+          uv venv -p 3.14 .venv
+          uv pip install -p .venv -r requirements_test.txt
+      - name: Lint
+        run: |
+          .venv/bin/ruff check .
+          .venv/bin/ruff format --check .
+      - name: Start a real HyperHDR
+        run: |
+          curl -sSL -o hyperhdr.tar.gz \
+            "https://github.com/awawa-dev/HyperHDR/releases/download/v${HYPERHDR_VERSION}.0/HyperHDR-${HYPERHDR_VERSION}-Linux-x86_64.tar.gz"
+          mkdir -p hyperhdr data && tar -xzf hyperhdr.tar.gz -C hyperhdr
+          LC_ALL=C.UTF-8 LD_LIBRARY_PATH=hyperhdr/lib/hyperhdr nohup hyperhdr/bin/hyperhdr -u "$PWD/data" --service > hyperhdr.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf "http://127.0.0.1:8090/json-rpc?request=%7B%22command%22:%22sysinfo%22%7D" > /dev/null && break; sleep 1; done
+      - name: Tests (unit and against HyperHDR)
+        env:
+          HYPERHDR_HOST: 127.0.0.1
+        run: .venv/bin/pytest -q
+      - name: HyperHDR log
+        if: failure()
+        run: tail -100 hyperhdr.log
