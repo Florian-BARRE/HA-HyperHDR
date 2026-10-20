@@ -98,13 +98,13 @@ async def test_components_and_settings_round_trip(hass: HomeAssistant) -> None:
 
     smoothing_type = ids["0_smoothing_type"]
     await hass.services.async_call(
-        "select", "select_option", {"entity_id": smoothing_type, "option": "RgbInterpolator"}, blocking=True
+        "select", "select_option", {"entity_id": smoothing_type, "option": "rgbinterpolator"}, blocking=True
     )
-    await _wait(hass, smoothing_type, "RgbInterpolator")
+    await _wait(hass, smoothing_type, "rgbinterpolator")
     await hass.services.async_call(
-        "select", "select_option", {"entity_id": smoothing_type, "option": "HybridRgbInterpolator"}, blocking=True
+        "select", "select_option", {"entity_id": smoothing_type, "option": "hybridrgbinterpolator"}, blocking=True
     )
-    await _wait(hass, smoothing_type, "HybridRgbInterpolator")
+    await _wait(hass, smoothing_type, "hybridrgbinterpolator")
 
 
 async def test_light_color_effect_and_source(hass: HomeAssistant) -> None:

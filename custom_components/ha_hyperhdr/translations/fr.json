@@ -183,12 +183,12 @@
       "smoothing_type": {
         "name": "Type de lissage",
         "state": {
-          "Stepper": "Stepper",
-          "YuvInterpolator": "Interpolation YUV",
-          "RgbInterpolator": "Interpolation RVB",
-          "HybridInterpolator": "Interpolation hybride",
-          "HybridRgbInterpolator": "Interpolation hybride RVB",
-          "ExponentialInterpolator": "Interpolation exponentielle"
+          "stepper": "Stepper",
+          "yuvinterpolator": "Interpolation YUV",
+          "rgbinterpolator": "Interpolation RVB",
+          "hybridinterpolator": "Interpolation hybride",
+          "hybridrgbinterpolator": "Interpolation hybride RVB",
+          "exponentialinterpolator": "Interpolation exponentielle"
         }
       },
       "blackborder_mode": {

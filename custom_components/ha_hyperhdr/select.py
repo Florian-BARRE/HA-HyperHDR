@@ -82,13 +82,17 @@ class SettingSelect(HyperHDRInstanceEntity, SelectEntity):
         )
         super().__init__(hub, connection, description)
         self.setting = setting
-        self._attr_options = list(setting.options) if setting.writer == "processing" else schema_options(setting, hub)
+        values = list(setting.options) if setting.writer == "processing" else schema_options(setting, hub)
+        # Options are lowercase (translation keys); HyperHDR's values may not be.
+        self._values = {value.lower(): value for value in values}
+        self._attr_options = list(self._values)
 
     @property
     def current_option(self) -> str | None:
         value = self.setting.read(self.hub, self.state_data)
-        return str(value) if value is not None and str(value) in self.options else None
+        option = str(value).lower() if value is not None else None
+        return option if option in self._values else None
 
     @hyperhdr_command
     async def async_select_option(self, option: str) -> None:
-        await self.setting.write(self.client, option)
+        await self.setting.write(self.client, self._values.get(option, option))

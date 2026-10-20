@@ -183,12 +183,12 @@
       "smoothing_type": {
         "name": "Smoothing type",
         "state": {
-          "Stepper": "Stepper",
-          "YuvInterpolator": "YUV interpolator",
-          "RgbInterpolator": "RGB interpolator",
-          "HybridInterpolator": "Hybrid interpolator",
-          "HybridRgbInterpolator": "Hybrid RGB interpolator",
-          "ExponentialInterpolator": "Exponential interpolator"
+          "stepper": "Stepper",
+          "yuvinterpolator": "YUV interpolator",
+          "rgbinterpolator": "RGB interpolator",
+          "hybridinterpolator": "Hybrid interpolator",
+          "hybridrgbinterpolator": "Hybrid RGB interpolator",
+          "exponentialinterpolator": "Exponential interpolator"
         }
       },
       "blackborder_mode": {
