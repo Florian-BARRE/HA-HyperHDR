@@ -8,8 +8,8 @@ Assistant, at almost no cost in resources.
 [![Validate](https://github.com/Florian-BARRE/HA-HyperHDR/actions/workflows/validate.yml/badge.svg)](https://github.com/Florian-BARRE/HA-HyperHDR/actions/workflows/validate.yml)
 [![Tests](https://github.com/Florian-BARRE/HA-HyperHDR/actions/workflows/tests.yml/badge.svg)](https://github.com/Florian-BARRE/HA-HyperHDR/actions/workflows/tests.yml)
 
-> **Status: in development, not released yet.** Tested against a real
-> HyperHDR 22 on every change.
+> **Status: beta.** Tested against a real HyperHDR 22 on every change; betas
+> come first, so turn on "Show beta versions" in HACS to get them.
 
 ## Why
 
@@ -32,13 +32,14 @@ interface offers, through the same API.
 
 ## Installation
 
-HACS, once released: _HACS → ⋮ → Custom repositories →_
-`https://github.com/Florian-BARRE/HA-HyperHDR`, category _Integration_,
-install **HyperHDR**, restart Home Assistant.
-
-Then _Settings → Devices & services_: HyperHDR is usually discovered on the
-network; otherwise _Add integration → HyperHDR_ with the address of the
-machine and the web port (8090).
+1. [HACS](https://hacs.xyz) → ⋮ → **Custom repositories** →
+   `https://github.com/Florian-BARRE/HA-HyperHDR`, type **Integration**.
+2. Open **HyperHDR** in HACS. While only betas exist: ⋮ → **Redownload** →
+   turn on **Show beta versions**, pick the latest. Then **Download**.
+3. Restart Home Assistant.
+4. _Settings → Devices & services_: HyperHDR is usually discovered on the
+   network; otherwise _Add integration → HyperHDR_ with the address of the
+   machine and the web port (8090).
 
 **Admin password.** It unlocks the settings, the captured picture and the
 configuration services. Left empty, HyperHDR's default password is tried;
@@ -138,14 +139,8 @@ data:
 
 ## Development
 
-```bash
-uv venv -p 3.14 .venv && uv pip install -p .venv -r requirements_test.txt
-.venv/bin/pytest                          # unit tests
-HYPERHDR_HOST=127.0.0.1 .venv/bin/pytest  # plus end-to-end against a HyperHDR
-```
-
-The CI starts a real HyperHDR (Linux build) and runs the end-to-end tests
-against it.
+See [CONTRIBUTING.md](CONTRIBUTING.md): layout, tests against a real
+HyperHDR, and how releases (and betas) are published.
 
 ## Related
 

@@ -1,5 +1,7 @@
 {
   "name": "HyperHDR",
   "homeassistant": "2026.8.0",
-  "render_readme": true
+  "render_readme": true,
+  "zip_release": true,
+  "filename": "ha_hyperhdr.zip"
 }
