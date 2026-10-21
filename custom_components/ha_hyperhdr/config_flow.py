@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlowWithReload
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -29,6 +30,10 @@ from .const import (
     CONF_LED_INTERVAL,
     CONF_PERFORMANCE,
     CONF_PRIORITY,
+    CONF_SSH_HOST_KEY,
+    CONF_SSH_PASSWORD,
+    CONF_SSH_PORT,
+    CONF_SSH_USERNAME,
     CONF_STREAM_FPS,
     DEFAULT_LED_INTERVAL,
     DEFAULT_PASSWORD,
@@ -37,8 +42,12 @@ from .const import (
     DOMAIN,
     MIN_VERSION,
 )
+from .ssh import DEFAULT_SSH_PORT, SSHAuthError, SSHError, SSHHostKeyError, SSHSudoError
+from .ssh import check as ssh_check
 
 _LOGGER = logging.getLogger(__name__)
+
+SSH_FIELDS = (CONF_SSH_USERNAME, CONF_SSH_PASSWORD, CONF_SSH_PORT, CONF_SSH_HOST_KEY)
 
 PASSWORD = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
@@ -241,12 +250,58 @@ class HyperHDRConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class HyperHDROptionsFlow(OptionsFlowWithReload):
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        if user_input is not None:
-            return self.async_create_entry(
-                data={key: int(value) if isinstance(value, float) else value for key, value in user_input.items()}
-            )
+    async def _ssh(self, values: dict[str, Any], errors: dict[str, str]) -> dict[str, Any] | None:
+        """SSH settings to keep, checked by logging in; `{}` turns SSH off."""
         options = self.config_entry.options
+        username = str(values.get(CONF_SSH_USERNAME) or "").strip()
+        if not username:
+            return {}
+        port = int(values.get(CONF_SSH_PORT) or DEFAULT_SSH_PORT)
+        # Left empty, the password kept for the same user stays.
+        password = values.get(CONF_SSH_PASSWORD) or (
+            options.get(CONF_SSH_PASSWORD) if options.get(CONF_SSH_USERNAME) == username else None
+        )
+        if not password:
+            errors["ssh"] = "ssh_password_required"
+            return None
+        try:
+            # A new check learns the machine's key again (after a reinstall).
+            host_key = await ssh_check(self.config_entry.data[CONF_HOST], port, username, password)
+        except SSHAuthError:
+            errors["ssh"] = "ssh_invalid_auth"
+        except SSHSudoError:
+            errors["ssh"] = "ssh_sudo"
+        except SSHHostKeyError:
+            errors["ssh"] = "ssh_host_key"
+        except SSHError:
+            errors["ssh"] = "ssh_cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected error while checking SSH")
+            errors["ssh"] = "unknown"
+        else:
+            return {
+                CONF_SSH_USERNAME: username,
+                CONF_SSH_PASSWORD: password,
+                CONF_SSH_PORT: port,
+                CONF_SSH_HOST_KEY: host_key,
+            }
+        return None
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        options = self.config_entry.options
+        if user_input is not None:
+            values = dict(user_input)
+            ssh = await self._ssh(values.pop("ssh", {}) or {}, errors)
+            if ssh is not None:
+                data = {
+                    key: int(value) if isinstance(value, float) else value
+                    for key, value in values.items()
+                    if key not in SSH_FIELDS
+                }
+                return self.async_create_entry(data={**data, **ssh})
+        current = user_input or {}
+        ssh_current = current.get("ssh") or {}
         schema = vol.Schema(
             {
                 vol.Required(CONF_PRIORITY, default=options.get(CONF_PRIORITY, DEFAULT_PRIORITY)): NumberSelector(
@@ -265,6 +320,28 @@ class HyperHDROptionsFlow(OptionsFlowWithReload):
                         min=50, max=2000, step=50, mode=NumberSelectorMode.SLIDER, unit_of_measurement="ms"
                     )
                 ),
+                vol.Required("ssh"): section(
+                    vol.Schema(
+                        {
+                            vol.Optional(
+                                CONF_SSH_USERNAME,
+                                description={
+                                    "suggested_value": ssh_current.get(
+                                        CONF_SSH_USERNAME, options.get(CONF_SSH_USERNAME)
+                                    )
+                                },
+                            ): TextSelector(),
+                            vol.Optional(CONF_SSH_PASSWORD): PASSWORD,
+                            vol.Required(
+                                CONF_SSH_PORT,
+                                default=ssh_current.get(CONF_SSH_PORT, options.get(CONF_SSH_PORT, DEFAULT_SSH_PORT)),
+                            ): NumberSelector(
+                                NumberSelectorConfig(min=1, max=65535, step=1, mode=NumberSelectorMode.BOX)
+                            ),
+                        }
+                    ),
+                    {"collapsed": not options.get(CONF_SSH_USERNAME) and "ssh" not in errors},
+                ),
             }
         )
-        return self.async_show_form(step_id="init", data_schema=schema)
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

@@ -69,11 +69,35 @@
         },
         "data_description": {
           "priority": "Les couleurs et effets lancés depuis Home Assistant l’utilisent ; plus petit = prioritaire (la capture est à 240)",
-          "performance": "CPU, température, mémoire, sous-tension et fps, envoyés par HyperHDR chaque minute",
+          "performance": "CPU, température, mémoire et sous-tension toutes les 30 s ; fps chaque minute",
           "stream_fps": "Pendant qu’on regarde la caméra",
           "led_interval": "Pendant qu’on regarde la caméra des LEDs"
+        },
+        "sections": {
+          "ssh": {
+            "name": "Extinction et redémarrage (SSH)",
+            "description": "Pour éteindre la machine proprement avant de lui couper le courant. Rien à installer dessus : le SSH activé (Raspberry Pi Imager, onglet Services) et l’utilisateur choisi là.",
+            "data": {
+              "ssh_username": "Utilisateur",
+              "ssh_password": "Mot de passe",
+              "ssh_port": "Port SSH"
+            },
+            "data_description": {
+              "ssh_username": "Vide : pas de boutons d’alimentation",
+              "ssh_password": "Le mot de passe de l’utilisateur, donné aussi à sudo ; vide garde celui enregistré",
+              "ssh_port": "22 par défaut"
+            }
+          }
         }
       }
+    },
+    "error": {
+      "ssh_password_required": "Saisis le mot de passe SSH",
+      "ssh_invalid_auth": "SSH refuse cet utilisateur ou ce mot de passe",
+      "ssh_sudo": "Connecté, mais sudo refuse : cet utilisateur n’a pas le droit d’utiliser sudo",
+      "ssh_host_key": "La clé SSH de la machine a changé",
+      "ssh_cannot_connect": "Impossible de joindre la machine en SSH (le SSH est-il activé ?)",
+      "unknown": "Erreur inattendue"
     }
   },
   "entity": {
@@ -91,6 +115,12 @@
       },
       "clear_all": {
         "name": "Effacer toutes les sources"
+      },
+      "poweroff": {
+        "name": "Éteindre"
+      },
+      "reboot": {
+        "name": "Redémarrer"
       }
     },
     "camera": {
@@ -295,6 +325,18 @@
     }
   },
   "exceptions": {
+    "ssh_invalid_auth": {
+      "message": "SSH refuse l’utilisateur ou le mot de passe : {error}"
+    },
+    "ssh_sudo": {
+      "message": "sudo a refusé : {error}"
+    },
+    "ssh_host_key": {
+      "message": "La clé SSH de la machine a changé (réinstallée ?) : enregistre de nouveau les options SSH. {error}"
+    },
+    "ssh_cannot_connect": {
+      "message": "Impossible de joindre la machine en SSH : {error}"
+    },
     "command_failed": {
       "message": "HyperHDR a refusé {command} : {error}"
     },

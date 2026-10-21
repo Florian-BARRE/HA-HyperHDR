@@ -100,7 +100,14 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     with patch(SETUP, return_value=True):
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {CONF_PRIORITY: 100, "performance": False, "stream_fps": 5, "led_interval": 250}
+            result["flow_id"],
+            {
+                CONF_PRIORITY: 100,
+                "performance": False,
+                "stream_fps": 5,
+                "led_interval": 250,
+                "ssh": {"ssh_port": 22},
+            },
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_PRIORITY] == 100
@@ -119,3 +126,57 @@ async def test_migration_drops_the_token(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
     assert entry.version == 2
     assert entry.data == {CONF_HOST: "h", CONF_PORT: 8090, CONF_LEGACY_TOKEN: True}
+
+
+SSH_CHECK = "custom_components.ha_hyperhdr.config_flow.ssh_check"
+OPTIONS = {CONF_PRIORITY: 128, "performance": True, "stream_fps": 10, "led_interval": 200}
+
+
+async def _options(hass: HomeAssistant, entry: MockConfigEntry, ssh: dict):
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    return await hass.config_entries.options.async_configure(result["flow_id"], {**OPTIONS, "ssh": ssh})
+
+
+async def test_options_ssh_is_checked_and_kept(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="533f43e3", version=2, data={CONF_HOST: "10.0.0.20", CONF_PORT: 8090}
+    )
+    entry.add_to_hass(hass)
+    with patch(SSH_CHECK, return_value="ssh-ed25519 AAAA") as check, patch(SETUP, return_value=True):
+        result = await _options(hass, entry, {"ssh_username": " pi ", "ssh_password": "pw", "ssh_port": 22})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    check.assert_called_once_with("10.0.0.20", 22, "pi", "pw")
+    assert entry.options["ssh_username"] == "pi"
+    assert entry.options["ssh_password"] == "pw"
+    assert entry.options["ssh_host_key"] == "ssh-ed25519 AAAA"
+
+    # Saved again without the password: the kept one is used.
+    with patch(SSH_CHECK, return_value="ssh-ed25519 AAAA") as check, patch(SETUP, return_value=True):
+        result = await _options(hass, entry, {"ssh_username": "pi", "ssh_port": 22})
+    check.assert_called_once_with("10.0.0.20", 22, "pi", "pw")
+
+    # No user: SSH is turned off.
+    with patch(SETUP, return_value=True):
+        result = await _options(hass, entry, {"ssh_port": 22})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "ssh_username" not in entry.options
+    assert "ssh_password" not in entry.options
+
+
+async def test_options_ssh_errors(hass: HomeAssistant) -> None:
+    from custom_components.ha_hyperhdr.ssh import SSHAuthError, SSHConnectionError, SSHSudoError
+
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="533f43e3", version=2, data={CONF_HOST: "h", CONF_PORT: 8090})
+    entry.add_to_hass(hass)
+    result = await _options(hass, entry, {"ssh_username": "pi", "ssh_port": 22})
+    assert result["errors"] == {"ssh": "ssh_password_required"}
+    for error, key in (
+        (SSHAuthError("no"), "ssh_invalid_auth"),
+        (SSHSudoError("no"), "ssh_sudo"),
+        (SSHConnectionError("no"), "ssh_cannot_connect"),
+    ):
+        with patch(SSH_CHECK, side_effect=error):
+            result = await _options(hass, entry, {"ssh_username": "pi", "ssh_password": "pw", "ssh_port": 22})
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"ssh": key}
+    assert "ssh_username" not in entry.options

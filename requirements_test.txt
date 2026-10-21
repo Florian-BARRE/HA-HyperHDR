@@ -1,3 +1,4 @@
 pytest-homeassistant-custom-component==0.13.373
 PyTurboJPEG==1.8.3
 ruff==0.17.1
+asyncssh==2.24.0

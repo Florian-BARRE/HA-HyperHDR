@@ -29,11 +29,16 @@ jobs:
             "https://github.com/awawa-dev/HyperHDR/releases/download/v${HYPERHDR_VERSION}.0/HyperHDR-${HYPERHDR_VERSION}-Linux-x86_64.tar.gz"
           mkdir -p hyperhdr && tar -xzf hyperhdr.tar.gz -C hyperhdr
           scripts/hyperhdr.sh start
+      - name: Fake HyperHDR host over SSH (real sshd and sudo, systemctl only writes down)
+        run: |
+          sudo apt-get install -y -q openssh-server > /dev/null
+          sudo scripts/ssh-test-host.sh
       - name: Tests (unit and against HyperHDR)
         env:
           HYPERHDR_HOST: 127.0.0.1
           # Lets the tests restart HyperHDR, as when the machine is turned off and on.
           HYPERHDR_RESTART: scripts/hyperhdr.sh restart
+          SSH_TEST_HOST: 127.0.0.1
         run: .venv/bin/pytest -q
       - name: HyperHDR log
         if: failure()

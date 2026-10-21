@@ -370,3 +370,45 @@ async def test_server_with_its_own_password(hass: HomeAssistant) -> None:
             await client.login(other)
             await client.request("authorize", subcommand="newPassword", password=other, newPassword=LIVE_PASSWORD)
             await client.close()
+
+
+@pytest.mark.skipif(os.environ.get("SSH_TEST_HOST") is None, reason="SSH_TEST_HOST is not set")
+async def test_power_off_button(hass: HomeAssistant) -> None:
+    """The Power off button, over a real SSH server (scripts/ssh-test-host.sh)."""
+    from custom_components.ha_hyperhdr.ssh import check
+
+    user = os.environ.get("SSH_TEST_USER", "hhpi")
+    password = os.environ.get("SSH_TEST_PASSWORD", "hh-pass-1234")
+    port = int(os.environ.get("SSH_TEST_PORT", "2222"))
+    log = os.environ.get("SSH_TEST_LOG", "/tmp/hh-systemctl.log")
+    key = await check(LIVE_HOST, port, user, password)
+    result = await validate(hass, LIVE_HOST, LIVE_PORT, None)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=result["id"],
+        version=2,
+        data={CONF_HOST: LIVE_HOST, CONF_PORT: LIVE_PORT},
+        options={"ssh_username": user, "ssh_password": password, "ssh_port": port, "ssh_host_key": key},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    buttons = {
+        item.unique_id.rsplit("_", 1)[-1]: item.entity_id
+        for item in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        if item.domain == "button"
+    }
+    assert {"poweroff", "reboot"} <= set(buttons)
+    await hass.async_add_executor_job(_write, log, "")
+    await hass.services.async_call("button", "press", {"entity_id": buttons["poweroff"]}, blocking=True)
+    assert (await hass.async_add_executor_job(_read, log)).split() == ["poweroff"]
+
+
+def _write(path: str, text: str) -> None:
+    with open(path, "w", encoding="utf-8") as file:
+        file.write(text)
+
+
+def _read(path: str) -> str:
+    with open(path, encoding="utf-8") as file:
+        return file.read()
