@@ -8,8 +8,9 @@ Assistant, at almost no cost in resources.
 [![Validate](https://github.com/Florian-BARRE/HA-HyperHDR/actions/workflows/validate.yml/badge.svg)](https://github.com/Florian-BARRE/HA-HyperHDR/actions/workflows/validate.yml)
 [![Tests](https://github.com/Florian-BARRE/HA-HyperHDR/actions/workflows/tests.yml/badge.svg)](https://github.com/Florian-BARRE/HA-HyperHDR/actions/workflows/tests.yml)
 
-> **Status: beta.** Tested against a real HyperHDR 22 on every change; betas
-> come first, so turn on "Show beta versions" in HACS to get them.
+> Tested against a real HyperHDR 22 on every change, with a real Raspberry Pi
+> at home. New features come as betas first: turn on "Show beta versions" in
+> HACS to try them.
 
 ## Why
 
@@ -40,9 +41,9 @@ interface offers, through the same API.
    Without the button: HACS → ⋮ (top right) → **Custom repositories** →
    repository `https://github.com/Florian-BARRE/HA-HyperHDR`, type
    **Integration** → **Add**.
-2. On the HyperHDR page in HACS, click **Download** (bottom right). For a
-   beta: ⋮ → **Redownload** → turn on **Show beta versions**, pick the
-   latest → **Download**.
+2. On the HyperHDR page in HACS, click **Download** (bottom right). To try a
+   beta: ⋮ → **Redownload** → turn on **Show beta versions**, pick it →
+   **Download**.
 3. Restart Home Assistant.
 4. HyperHDR is usually discovered on the network (_Settings → Devices &
    services_). Otherwise:
@@ -79,6 +80,11 @@ they run `sudo systemctl poweroff` (or `reboot`). The password is also handed
 to sudo, so it works whether sudo asks for it or not (Raspberry Pi OS's first
 user does not). The machine's SSH key is checked at each use; after
 reinstalling the machine, save the SSH options again.
+
+An ESPHome device that presses **Power off** itself (an Ambilight box cutting
+the Pi's power after it shut down, say) needs "Allow the device to perform
+Home Assistant actions" turned on in its ESPHome options; otherwise Home
+Assistant refuses the action and raises a repair.
 
 Needs HyperHDR 21 or newer, and Home Assistant 2026.8 or newer.
 
@@ -203,7 +209,9 @@ HyperHDR, and how releases (and betas) are published.
 ## Related
 
 - [Vivid Cards](https://github.com/Florian-BARRE/vivid-cards): Lovelace cards
-  for Home Assistant; a HyperHDR card working with this integration is planned.
+  for Home Assistant, with a HyperHDR card made for this integration (hub and
+  strips on one line each, the picture on demand) and the Ambilight manager
+  card, which uses the CPU temperature, the health and the Power off button.
 
 ## License
 
