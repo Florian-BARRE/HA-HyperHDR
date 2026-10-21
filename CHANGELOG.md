@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.0b5] - 2026-10-21
+
+### Added
+
+- Name prefix, in the options: with `salon-ambilight-hyperhdr`, the server
+  becomes `salon-ambilight-hyperhdr-hub` and each strip
+  `salon-ambilight-hyperhdr-<its HyperHDR name, spaces as _>`. Saving it renames
+  the devices (names typed by hand on them go) and recreates the entity ids
+  from the device and entity names, without the area (the prefix holds the
+  room): `sensor.salon_ambilight_hyperhdr_hub_cpu_temperature`. Automations and
+  dashboards using the old ids must be updated.
+
 ## [0.1.0b4] - 2026-10-21
 
 ### Added
@@ -75,6 +87,7 @@ First beta, to test from HACS ("Show beta versions").
 - Tests: unit tests, and end-to-end tests against a real HyperHDR 22 in CI.
 - Docs: HyperHDR API map and entities.
 
+[0.1.0b5]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b5
 [0.1.0b4]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b4
 [0.1.0b3]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b3
 [0.1.0b2]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b2

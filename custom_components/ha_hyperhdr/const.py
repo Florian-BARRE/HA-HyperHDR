@@ -13,6 +13,8 @@ CONF_PERFORMANCE: Final = "performance"
 CONF_STREAM_FPS: Final = "stream_fps"
 CONF_LED_INTERVAL: Final = "led_interval"
 CONF_USE_SSL: Final = "use_ssl"
+#: Names of the devices: "<prefix>-hub" and "<prefix>-<strip>" (options).
+CONF_NAME_PREFIX: Final = "name_prefix"
 #: Clean power off and restart of HyperHDR's machine, over SSH (options).
 CONF_SSH_USERNAME: Final = "ssh_username"
 CONF_SSH_PASSWORD: Final = "ssh_password"

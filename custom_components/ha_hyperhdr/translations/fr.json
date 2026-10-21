@@ -62,12 +62,14 @@
       "init": {
         "title": "Options HyperHDR",
         "data": {
+          "name_prefix": "Préfixe des noms",
           "priority": "Priorité de Home Assistant",
           "performance": "Santé de la machine et fréquences d’images",
           "stream_fps": "Fréquence de l’image capturée",
           "led_interval": "Rafraîchissement des couleurs des LEDs"
         },
         "data_description": {
+          "name_prefix": "Par exemple salon-ambilight-hyperhdr : le serveur devient salon-ambilight-hyperhdr-hub, chaque bandeau salon-ambilight-hyperhdr- suivi de son nom HyperHDR, espaces en _. L’enregistrer renomme les appareils et recrée les ID des entités (les automatisations qui utilisent les anciens ID sont à mettre à jour). Vide : les noms d’HyperHDR",
           "priority": "Les couleurs et effets lancés depuis Home Assistant l’utilisent ; plus petit = prioritaire (la capture est à 240)",
           "performance": "CPU, température, mémoire et sous-tension toutes les 30 s ; fps chaque minute",
           "stream_fps": "Pendant qu’on regarde la caméra",

@@ -137,6 +137,26 @@ newer HyperHDR brings its new options.
   to the capture; `Solid` keeps the last color.
 - **Brightness** is the luminance gain (full brightness = 1.0).
 
+### Names and entity ids
+
+Home Assistant makes an entity id once, when the entity first appears, and
+renaming a device afterwards does not change it. To name everything your own
+way at once, set **Name prefix** in the options. With
+`salon-ambilight-hyperhdr`:
+
+| Device              | Name                                       | Entity ids                                  |
+| ------------------- | ------------------------------------------ | ------------------------------------------- |
+| The server          | `salon-ambilight-hyperhdr-hub`             | `sensor.salon_ambilight_hyperhdr_hub_cpu_…` |
+| A strip `salon canapé WLED` | `salon-ambilight-hyperhdr-salon_canapé_WLED` | `light.salon_ambilight_hyperhdr_salon_canape_wled` |
+
+Hyphens part the levels, underscores join the words of a strip's name (its
+HyperHDR instance name: rename the instance in HyperHDR to change it). Entity
+ids can hold neither hyphens nor accents, Home Assistant makes them `_` and
+plain letters. Saving the prefix renames the devices, dropping names typed by
+hand on them, and recreates the entity ids from the device and entity names,
+without the area. Automations, scripts, dashboards and ESPHome configurations
+that use the old ids must be updated.
+
 ## Services
 
 | Service                        | Does                                                                  |
@@ -165,6 +185,7 @@ data:
 | Host health and frame rates  | on       | Host measured every 30 s, frame rates pushed every minute    |
 | Captured picture rate        | 10 fps   | Frame rate of the captured picture while it is viewed        |
 | LED colors refresh           | 200 ms   | Refresh of the LED colors camera while it is viewed          |
+| Name prefix                  | none     | Names the devices `<prefix>-hub` and `<prefix>-<strip>`; see below |
 | Power off and restart (SSH)  | off      | User, password and port to power the machine off over SSH    |
 
 ## Documentation

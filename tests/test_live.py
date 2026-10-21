@@ -412,3 +412,52 @@ def _write(path: str, text: str) -> None:
 def _read(path: str) -> str:
     with open(path, encoding="utf-8") as file:
         return file.read()
+
+
+async def _names(hass: HomeAssistant, entry: MockConfigEntry) -> tuple[list[str], list[str]]:
+    from homeassistant.helpers import device_registry as dr
+
+    devices = sorted(
+        device.name or "" for device in dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
+    )
+    ids = sorted(item.entity_id for item in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id))
+    return devices, ids
+
+
+async def test_name_prefix_renames_devices_and_entity_ids(hass: HomeAssistant) -> None:
+    """salon-ambilight-hyperhdr: the hub and the strips named the user's way, ids after them."""
+    from homeassistant.helpers import area_registry as ar
+    from homeassistant.helpers import device_registry as dr
+
+    entry = await _setup(hass)
+    devices = dr.async_get(hass)
+    # A name typed by hand on the strip, and the devices in the living room.
+    salon = ar.async_get(hass).async_create("Salon")
+    for device in dr.async_entries_for_config_entry(devices, entry.entry_id):
+        devices.async_update_device(device.id, area_id=salon.id)
+    strip = next(d for d in dr.async_entries_for_config_entry(devices, entry.entry_id) if d.via_device_id)
+    devices.async_update_device(strip.id, name_by_user="typed by hand")
+    # Home Assistant's default "Entity ID format" puts the area first: the prefix
+    # already holds the room, so it must not come twice.
+
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "name_prefix": "salon-ambilight-hyperhdr"})
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    names, ids = await _names(hass, entry)
+    strip_name = "salon-ambilight-hyperhdr-" + "_".join(entry.runtime_data.instances[0].state.name.split())
+    assert names == sorted(["salon-ambilight-hyperhdr-hub", strip_name])
+    assert all(device.name_by_user is None for device in dr.async_entries_for_config_entry(devices, entry.entry_id))
+    assert "binary_sensor.salon_ambilight_hyperhdr_hub_connected" in ids
+    assert "sensor.salon_ambilight_hyperhdr_hub_cpu_temperature" in ids
+    strip_slug = strip_name.replace("-", "_").lower()
+    assert f"light.{strip_slug}" in ids
+    assert f"switch.{strip_slug}_hdr_tone_mapping" in ids
+    assert entry.title == "salon-ambilight-hyperhdr"
+    assert hass.states.get("sensor.salon_ambilight_hyperhdr_hub_cpu_temperature") is not None
+
+    # Saved again unchanged: nothing moves (a reload does not recreate the ids).
+    before = ids
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (await _names(hass, entry))[1] == before
