@@ -13,6 +13,12 @@ CONF_PERFORMANCE: Final = "performance"
 CONF_STREAM_FPS: Final = "stream_fps"
 CONF_LED_INTERVAL: Final = "led_interval"
 CONF_USE_SSL: Final = "use_ssl"
+#: Clean power off and restart of HyperHDR's machine, over SSH (options).
+CONF_SSH_USERNAME: Final = "ssh_username"
+CONF_SSH_PASSWORD: Final = "ssh_password"
+CONF_SSH_PORT: Final = "ssh_port"
+#: The machine's SSH host key, learnt when SSH is set up and checked afterwards.
+CONF_SSH_HOST_KEY: Final = "ssh_host_key"
 #: Set on entries that kept a token (0.1.0b2 and before), until they connect again.
 CONF_LEGACY_TOKEN: Final = "legacy_token"
 

@@ -64,6 +64,22 @@ password of yours asks for the new one (reauthentication).
 **Turning the machine off.** Nothing to do: the integration reconnects by
 itself when HyperHDR comes back, as often as needed.
 
+**Powering the machine off cleanly.** Before cutting the power of a Raspberry
+Pi, it should shut down. HyperHDR's API cannot do it, so the integration does
+it over SSH, with nothing to install on the machine:
+
+1. SSH turned on: in Raspberry Pi Imager, _Services_ tab, "Enable SSH" with
+   password authentication (or `sudo raspi-config` → Interface options → SSH).
+2. In the integration's options, _Power off and restart (SSH)_: the user and
+   password set in Imager. Saving checks them, with a harmless `sudo true`, and
+   learns the machine's SSH key.
+
+Two buttons then appear on the server device, **Power off** and **Restart**:
+they run `sudo systemctl poweroff` (or `reboot`). The password is also handed
+to sudo, so it works whether sudo asks for it or not (Raspberry Pi OS's first
+user does not). The machine's SSH key is checked at each use; after
+reinstalling the machine, save the SSH options again.
+
 Needs HyperHDR 21 or newer, and Home Assistant 2026.8 or newer.
 
 ## Devices and entities
@@ -81,6 +97,7 @@ marked _off_ are disabled by default; _admin_ ones need the admin password.
 | Capture rate                             | sensor (fps)  |                                                |
 | Grabber, Video mode                      | sensors       | Current device and resolution                  |
 | Version                                  | sensor        |                                                |
+| Power off, Restart                       | buttons       | Once SSH is set up in the options              |
 | Captured picture                         | camera        | _admin_, on demand                             |
 | Grabber brightness, contrast, saturation, hue | numbers  | _off_, _admin_                                 |
 | Crop top, bottom, left, right            | numbers       | _off_, _admin_                                 |
@@ -148,6 +165,7 @@ data:
 | Host health and frame rates  | on       | Host measured every 30 s, frame rates pushed every minute    |
 | Captured picture rate        | 10 fps   | Frame rate of the captured picture while it is viewed        |
 | LED colors refresh           | 200 ms   | Refresh of the LED colors camera while it is viewed          |
+| Power off and restart (SSH)  | off      | User, password and port to power the machine off over SSH    |
 
 ## Documentation
 

@@ -69,11 +69,35 @@
         },
         "data_description": {
           "priority": "Colors and effects set from Home Assistant use it; lower wins (the capture is 240)",
-          "performance": "CPU, temperature, memory, undervoltage and fps, sent by HyperHDR every minute",
+          "performance": "CPU, temperature, memory and undervoltage every 30 s; fps every minute",
           "stream_fps": "While the camera is viewed",
           "led_interval": "While the LED camera is viewed"
+        },
+        "sections": {
+          "ssh": {
+            "name": "Power off and restart (SSH)",
+            "description": "To power the machine off cleanly before cutting its power. Nothing to install on it: SSH turned on (Raspberry Pi Imager, Services tab) and the user set there.",
+            "data": {
+              "ssh_username": "User",
+              "ssh_password": "Password",
+              "ssh_port": "SSH port"
+            },
+            "data_description": {
+              "ssh_username": "Empty: no power buttons",
+              "ssh_password": "The user's password, also given to sudo; empty keeps the saved one",
+              "ssh_port": "22 by default"
+            }
+          }
         }
       }
+    },
+    "error": {
+      "ssh_password_required": "Enter the SSH password",
+      "ssh_invalid_auth": "SSH refused this user or password",
+      "ssh_sudo": "Logged in, but sudo refused: this user may not use sudo",
+      "ssh_host_key": "The machine's SSH key changed",
+      "ssh_cannot_connect": "Cannot reach the machine over SSH (is SSH turned on?)",
+      "unknown": "Unexpected error"
     }
   },
   "entity": {
@@ -91,6 +115,12 @@
       },
       "clear_all": {
         "name": "Clear all sources"
+      },
+      "poweroff": {
+        "name": "Power off"
+      },
+      "reboot": {
+        "name": "Restart"
       }
     },
     "camera": {
@@ -295,6 +325,18 @@
     }
   },
   "exceptions": {
+    "ssh_invalid_auth": {
+      "message": "SSH refused the user or password: {error}"
+    },
+    "ssh_sudo": {
+      "message": "sudo refused: {error}"
+    },
+    "ssh_host_key": {
+      "message": "The machine's SSH key changed (reinstalled?): save the SSH options again. {error}"
+    },
+    "ssh_cannot_connect": {
+      "message": "Cannot reach the machine over SSH: {error}"
+    },
     "command_failed": {
       "message": "HyperHDR refused {command}: {error}"
     },

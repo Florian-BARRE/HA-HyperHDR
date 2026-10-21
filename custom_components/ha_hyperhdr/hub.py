@@ -34,6 +34,10 @@ from .const import (
     CONF_LEGACY_TOKEN,
     CONF_PERFORMANCE,
     CONF_PRIORITY,
+    CONF_SSH_HOST_KEY,
+    CONF_SSH_PASSWORD,
+    CONF_SSH_PORT,
+    CONF_SSH_USERNAME,
     CONF_STREAM_FPS,
     CONF_USE_SSL,
     DEFAULT_LED_INTERVAL,
@@ -45,6 +49,7 @@ from .const import (
     HOST_HEALTH_INTERVAL,
     RECONNECT_DELAYS,
 )
+from .ssh import DEFAULT_SSH_PORT, PowerAction, power
 from .state import InstanceState, ServerState
 
 _LOGGER = logging.getLogger(__name__)
@@ -316,6 +321,23 @@ class HyperHDRHub:
         for connection in [self.primary, *self.instances.values()]:
             if connection:
                 connection.client.password = None
+
+    @property
+    def ssh_configured(self) -> bool:
+        options = self.entry.options
+        return bool(options.get(CONF_SSH_USERNAME) and options.get(CONF_SSH_PASSWORD))
+
+    async def async_power(self, action: PowerAction) -> None:
+        """Powers the machine off or restarts it over SSH (raises SSHError)."""
+        options = self.entry.options
+        await power(
+            action,
+            self.host,
+            int(options.get(CONF_SSH_PORT, DEFAULT_SSH_PORT)),
+            options[CONF_SSH_USERNAME],
+            options[CONF_SSH_PASSWORD],
+            options.get(CONF_SSH_HOST_KEY),
+        )
 
     @property
     def admin(self) -> bool:

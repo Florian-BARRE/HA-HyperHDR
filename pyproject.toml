@@ -8,6 +8,8 @@ license = "MIT"
 [tool.ruff]
 line-length = 120
 target-version = "py313"
+# Translation data, kept one language pair per line.
+extend-exclude = ["scripts/gen_strings.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "B", "UP", "I", "SIM", "ASYNC", "RUF"]

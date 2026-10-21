@@ -7,6 +7,7 @@ custom_components/ha_hyperhdr/
   api.py            WebSocket client of HyperHDR's JSON API (no Home Assistant import).
   state.py          Instance and server state, built from pushed updates (pure).
   hub.py            One connection per running instance, reconnections, coordinators.
+  ssh.py            Clean power off / restart of the machine over SSH (no HA dependency).
   settings.py       The HyperHDR settings exposed as entities, declared once.
   entity.py         Server and instance devices, base entities, error handling.
   config_flow.py    Discovery (SSDP), password (kept, never a token), reauth, reconfigure, options.
@@ -41,11 +42,21 @@ A local HyperHDR for the end-to-end tests (Linux x86_64):
 
 ```bash
 curl -sSLO https://github.com/awawa-dev/HyperHDR/releases/download/v22.0.0.0/HyperHDR-22.0.0-Linux-x86_64.tar.gz
-mkdir -p hyperhdr data && tar -xzf HyperHDR-22.0.0-Linux-x86_64.tar.gz -C hyperhdr
-LD_LIBRARY_PATH=hyperhdr/lib/hyperhdr hyperhdr/bin/hyperhdr -u "$PWD/data" --service
+mkdir -p hyperhdr && tar -xzf HyperHDR-22.0.0-Linux-x86_64.tar.gz -C hyperhdr
+scripts/hyperhdr.sh start           # also: stop, restart
 ```
 
-The CI does the same on every push and pull request.
+Then, for the tests that restart HyperHDR (as when its machine is turned off
+and on) and the SSH power off against a real OpenSSH and sudo:
+
+```bash
+sudo scripts/ssh-test-host.sh       # sshd on 2222, a sudo user, a systemctl that only writes down
+HYPERHDR_HOST=127.0.0.1 HYPERHDR_RESTART="scripts/hyperhdr.sh restart" SSH_TEST_HOST=127.0.0.1 .venv/bin/pytest
+```
+
+`ssh-test-host.sh` replaces `systemctl` for sudo (`/usr/local/sbin`): run it on a
+throwaway machine or container only. The CI does all of this on every push and
+pull request.
 
 ## Releasing
 

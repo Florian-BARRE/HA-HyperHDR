@@ -4,6 +4,26 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.0b4] - 2026-10-21
+
+### Added
+
+- Power off and restart the machine cleanly, over SSH: in the options, the
+  user and password of the machine (nothing to install on it, SSH turned on).
+  Saving checks them and learns the machine's SSH key; **Power off** and
+  **Restart** buttons then appear on the server device. They run
+  `sudo systemctl poweroff` / `reboot`, the password handed to sudo.
+
+### Fixed
+
+- The options said the host health came every minute: it is every 30 s.
+
+### Changed
+
+- Tests: SSH against a server run by the tests, and against a real OpenSSH
+  with a real sudo in CI (`scripts/ssh-test-host.sh`, where `systemctl` only
+  writes down what it is asked).
+
 ## [0.1.0b3] - 2026-10-21
 
 ### Fixed
@@ -55,6 +75,7 @@ First beta, to test from HACS ("Show beta versions").
 - Tests: unit tests, and end-to-end tests against a real HyperHDR 22 in CI.
 - Docs: HyperHDR API map and entities.
 
+[0.1.0b4]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b4
 [0.1.0b3]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b3
 [0.1.0b2]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b2
 [0.1.0b1]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b1

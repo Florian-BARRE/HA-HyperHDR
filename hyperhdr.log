@@ -1,0 +1,59 @@
+QCommandLineParser: option not expecting values: "v"
+QCommandLineParser: option not expecting values: "version"
+QCommandLineParser: option not expecting values: "deleteDatabase"
+QCommandLineParser: option not expecting values: "desktop"
+QCommandLineParser: option not expecting values: "d"
+QCommandLineParser: option not expecting values: "resetPassword"
+QCommandLineParser: option not expecting values: "wait-hyperhdr"
+QCommandLineParser: option not expecting values: "service"
+QCommandLineParser: option not expecting values: "pipewire"
+QCommandLineParser: option not expecting values: "s"
+The HyperHDR Daemon is already running, abort startQCommandLineParser: option not expecting values: "wait-hyperhdr"
+QCommandLineParser: option not expecting values: "d"
+QCommandLineParser: option not expecting values: "v"
+QCommandLineParser: option not expecting values: "desktop"
+QCommandLineParser: option not expecting values: "s"
+QCommandLineParser: option not expecting values: "resetPassword"
+QCommandLineParser: option not expecting values: "deleteDatabase"
+QCommandLineParser: option not expecting values: "pipewire"
+QCommandLineParser: option not expecting values: "version"
+QCommandLineParser: option not expecting values: "service"
+
+HyperHDR caught signal :SIGTERM
+SmartPointer is removing: FlatProtoBufferThread and children
+SmartPointer is removing: MQTT
+SmartPointer is removing: NetworkThread and children
+SmartPointer is removing: HyperHDR instance at index = 0
+RawUdpServer exits now
+VideoControl exits now
+SystemControl exits now
+SmartPointer is removing: effect0/0 => "Rainbow swirl fast"
+SmartPointer is removing: LedDeviceThread0 [LedDevice]
+SmartPointer is removing: SoundGrabber
+SmartPointer is removing: DiscoveryWrapper
+SmartPointer is removing: VideoGrabber
+SmartPointer is removing: SystemGrabber
+SmartPointer is removing: HyperHdrManager
+SmartPointer is removing: AccessManager
+SmartPointer is removing: PerformanceCounters
+SmartPointer is removing: NetOrigin
+QCommandLineParser: option not expecting values: "s"
+QCommandLineParser: option not expecting values: "service"
+QCommandLineParser: option not expecting values: "resetPassword"
+QCommandLineParser: option not expecting values: "pipewire"
+QCommandLineParser: option not expecting values: "deleteDatabase"
+QCommandLineParser: option not expecting values: "wait-hyperhdr"
+QCommandLineParser: option not expecting values: "d"
+QCommandLineParser: option not expecting values: "desktop"
+QCommandLineParser: option not expecting values: "v"
+QCommandLineParser: option not expecting values: "version"
+The HyperHDR Daemon is already running, abort startQCommandLineParser: option not expecting values: "wait-hyperhdr"
+QCommandLineParser: option not expecting values: "deleteDatabase"
+QCommandLineParser: option not expecting values: "v"
+QCommandLineParser: option not expecting values: "s"
+QCommandLineParser: option not expecting values: "service"
+QCommandLineParser: option not expecting values: "version"
+QCommandLineParser: option not expecting values: "d"
+QCommandLineParser: option not expecting values: "desktop"
+QCommandLineParser: option not expecting values: "pipewire"
+QCommandLineParser: option not expecting values: "resetPassword"
