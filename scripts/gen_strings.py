@@ -28,7 +28,7 @@ def OUT():
       "cpu": t("CPU","Processeur"), "cpu_temperature": t("CPU temperature","Température du processeur"), "memory": t("Memory","Mémoire"),
       "capture_fps": t("Capture rate","Fréquence de capture"), "grabber": t("Grabber","Grabber"), "video_mode": t("Video mode","Mode vidéo"),
       "version": t("Version","Version"), "output_fps": t("Output rate","Fréquence de sortie"), "led_fps": t("LED rate","Fréquence des LEDs"),
-      "led_count": t("LEDs","LEDs"), "average_color": t("Average color","Couleur moyenne"),
+      "led_count": t("LEDs","LEDs"), "led_device": t("LED device","Appareil LED"), "average_color": t("Average color","Couleur moyenne"),
       "visible_source": {"name": t("Visible source","Source affichée"), "state": {
         "none": t("None","Aucune"), "videograbber": t("Video capture","Capture vidéo"), "systemgrabber": t("System capture","Capture système"),
         "color": t("Color","Couleur"), "effect": t("Effect","Effet"), "image": t("Image","Image"), "flatbufserver": "Flatbuffers",

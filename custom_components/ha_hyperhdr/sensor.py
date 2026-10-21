@@ -42,6 +42,23 @@ class InstanceSensorDescription(SensorEntityDescription):
     value: Callable[[InstanceState, ServerState], Any]
     attributes: Callable[[InstanceState, ServerState], dict[str, Any]] | None = None
     performance: bool = False
+    #: Read from the instance's settings, which need the admin password.
+    admin: bool = False
+
+
+def _device(state: InstanceState) -> dict[str, Any]:
+    device = state.settings.get("device")
+    return device if isinstance(device, dict) else {}
+
+
+def _device_address(state: InstanceState) -> str | None:
+    """Where the LEDs are sent: the network host (WLED, UDP…) or the serial port."""
+    device = _device(state)
+    for key in ("host", "output"):
+        value = device.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
 
 
 def _grabber_fps(server: ServerState) -> float | None:
@@ -184,6 +201,16 @@ INSTANCE_SENSORS: tuple[InstanceSensorDescription, ...] = (
         value=_instance_fps(PERF_LED),
     ),
     InstanceSensorDescription(
+        key="led_device",
+        translation_key="led_device",
+        admin=True,
+        value=lambda state, server: str(_device(state).get("type") or "").strip() or None,
+        attributes=lambda state, server: {
+            "address": _device_address(state),
+            "refresh_time_ms": _device(state).get("refreshTime"),
+        },
+    ),
+    InstanceSensorDescription(
         key="led_count",
         translation_key="led_count",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -212,7 +239,7 @@ async def async_setup_entry(
         entities.extend(
             InstanceSensor(hub, connection, description)
             for description in INSTANCE_SENSORS
-            if hub.performance or not description.performance
+            if (hub.performance or not description.performance) and (hub.admin or not description.admin)
         )
         entities.append(AverageColorSensor(hub, connection, AVERAGE_COLOR))
     async_add_entities(entities)

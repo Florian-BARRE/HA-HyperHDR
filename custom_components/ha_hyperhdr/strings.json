@@ -264,6 +264,9 @@
       "led_count": {
         "name": "LEDs"
       },
+      "led_device": {
+        "name": "LED device"
+      },
       "average_color": {
         "name": "Average color"
       },
