@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlowWithReload
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -66,16 +66,15 @@ def _version(text: str) -> tuple[int, ...]:
 
 
 async def validate(hass: HomeAssistant, host: str, port: int, password: str | None) -> dict[str, Any]:
-    """Connects, logs in, checks the version. Returns id, version, hostname, token."""
+    """Connects, logs in, checks the version. Returns id, version, hostname, admin."""
     client = HyperHDRClient(host, port, session=async_get_clientsession(hass, verify_ssl=False))
     try:
         await client.connect()
     except HyperHDRError as err:
         raise CannotConnect from err
     try:
-        token: str | None = None
         try:
-            token = await client.login(password=password or DEFAULT_PASSWORD)
+            await client.login(password or DEFAULT_PASSWORD)
         except HyperHDRAuthError as err:
             if password:
                 raise InvalidAuth from err
@@ -93,7 +92,7 @@ async def validate(hass: HomeAssistant, host: str, port: int, password: str | No
             "id": str(hyperhdr.get("id") or f"{host}:{port}"),
             "version": version,
             "hostname": str(server.get("hostname") or host),
-            "token": token,
+            "admin": client.admin,
         }
     except HyperHDRError as err:
         raise CannotConnect from err
@@ -102,7 +101,7 @@ async def validate(hass: HomeAssistant, host: str, port: int, password: str | No
 
 
 class HyperHDRConfigFlow(ConfigFlow, domain=DOMAIN):
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         self._host: str | None = None
@@ -130,8 +129,13 @@ class HyperHDRConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return None
 
-    def _data(self, host: str, port: int, result: dict[str, Any]) -> dict[str, Any]:
-        return {CONF_HOST: host, CONF_PORT: port, CONF_TOKEN: result["token"]}
+    def _data(self, host: str, port: int, password: str | None) -> dict[str, Any]:
+        """The password is kept only when one was given: HyperHDR's token for
+        it changes each time HyperHDR starts, the password does not."""
+        data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
+        if password:
+            data[CONF_PASSWORD] = password
+        return data
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
@@ -143,7 +147,8 @@ class HyperHDRConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(result["id"])
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_PORT: port})
                 return self.async_create_entry(
-                    title=f"HyperHDR {result['hostname']}", data=self._data(host, port, result)
+                    title=f"HyperHDR {result['hostname']}",
+                    data=self._data(host, port, user_input.get(CONF_PASSWORD)),
                 )
         schema = vol.Schema(
             {
@@ -179,7 +184,8 @@ class HyperHDRConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(result["id"], raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self._host, CONF_PORT: self._port})
                 return self.async_create_entry(
-                    title=f"HyperHDR {result['hostname']}", data=self._data(self._host, self._port, result)
+                    title=f"HyperHDR {result['hostname']}",
+                    data=self._data(self._host, self._port, user_input.get(CONF_PASSWORD)),
                 )
         return self.async_show_form(
             step_id="discovery_confirm",
@@ -199,7 +205,10 @@ class HyperHDRConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry.data[CONF_HOST], entry.data[CONF_PORT], user_input.get(CONF_PASSWORD), errors
             )
             if result:
-                return self.async_update_reload_and_abort(entry, data_updates={CONF_TOKEN: result["token"]})
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=self._data(entry.data[CONF_HOST], entry.data[CONF_PORT], user_input.get(CONF_PASSWORD)),
+                )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): PASSWORD}),
@@ -217,7 +226,8 @@ class HyperHDRConfigFlow(ConfigFlow, domain=DOMAIN):
             if result:
                 await self.async_set_unique_id(result["id"])
                 self._abort_if_unique_id_mismatch(reason="wrong_server")
-                return self.async_update_reload_and_abort(entry, data=self._data(host, port, result))
+                password = user_input.get(CONF_PASSWORD) or entry.data.get(CONF_PASSWORD)
+                return self.async_update_reload_and_abort(entry, data=self._data(host, port, password))
         schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str,

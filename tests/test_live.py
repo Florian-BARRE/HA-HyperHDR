@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import subprocess
+from functools import partial
 
+import aiohttp
 import pytest
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.ha_hyperhdr.api import HyperHDRClient
 from custom_components.ha_hyperhdr.config_flow import validate
 from custom_components.ha_hyperhdr.const import DOMAIN
 
@@ -18,12 +25,14 @@ from .conftest import LIVE_HOST, LIVE_PASSWORD, LIVE_PORT, live
 pytestmark = [live, pytest.mark.usefixtures("socket_enabled")]
 
 
-async def _setup(hass: HomeAssistant) -> MockConfigEntry:
-    result = await validate(hass, LIVE_HOST, LIVE_PORT, LIVE_PASSWORD)
+async def _setup(hass: HomeAssistant, extra: dict | None = None, version: int = 2) -> MockConfigEntry:
+    """No password given, as most users: HyperHDR's default one is tried."""
+    result = await validate(hass, LIVE_HOST, LIVE_PORT, None)
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=result["id"],
-        data={CONF_HOST: LIVE_HOST, CONF_PORT: LIVE_PORT, CONF_TOKEN: result["token"]},
+        version=version,
+        data={CONF_HOST: LIVE_HOST, CONF_PORT: LIVE_PORT, **(extra or {})},
         title="HyperHDR",
     )
     entry.add_to_hass(hass)
@@ -45,7 +54,7 @@ async def _wait(hass: HomeAssistant, entity_id: str, state: str, timeout: float 
 async def test_validate(hass: HomeAssistant) -> None:
     result = await validate(hass, LIVE_HOST, LIVE_PORT, LIVE_PASSWORD)
     assert result["version"]
-    assert result["token"] and len(result["token"]) > 36
+    assert result["admin"] is True
 
 
 async def test_setup_and_entities(hass: HomeAssistant) -> None:
@@ -265,3 +274,99 @@ async def test_host_health(hass: HomeAssistant) -> None:
         state = hass.states.get(entity_id)
         assert state is not None
         assert 0 <= float(state.state) <= 100, f"{entity_id} is {state.state}"
+
+
+RESTART = os.environ.get("HYPERHDR_RESTART")
+restartable = pytest.mark.skipif(RESTART is None, reason="HYPERHDR_RESTART is not set")
+
+
+async def _restart_hyperhdr(hass: HomeAssistant) -> None:
+    """Restarts the real HyperHDR, as when its machine is turned off and on."""
+    await hass.async_add_executor_job(partial(subprocess.run, RESTART, shell=True, check=True))
+
+
+def _connected_sensor(hass: HomeAssistant, entry: MockConfigEntry) -> str:
+    return next(
+        item.entity_id
+        for item in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        if item.entity_id.endswith("connected")
+    )
+
+
+@restartable
+async def test_survives_a_restart_of_hyperhdr(hass: HomeAssistant) -> None:
+    """HyperHDR makes a new login token at each start: the integration must
+    log in again by itself, with its admin rights, and never ask anything."""
+    entry = await _setup(hass)
+    hub = entry.runtime_data
+    assert hub.admin
+    connected = _connected_sensor(hass, entry)
+    seen: list[str] = []
+    unsubscribe = async_track_state_change_event(
+        hass, connected, lambda event: seen.append(event.data["new_state"].state)
+    )
+    await _restart_hyperhdr(hass)
+    for _ in range(600):
+        if "off" in seen and hass.states.get(connected).state == "on":
+            break
+        await asyncio.sleep(0.05)
+    unsubscribe()
+    assert "off" in seen, "the restart was not noticed"
+    assert hass.states.get(connected).state == "on", f"not reconnected: {seen}"
+    assert entry.state is ConfigEntryState.LOADED
+    assert hub.admin, "admin rights lost after the restart"
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN), "a reauthentication was started"
+    # An admin command still goes through.
+    settings = await hub.primary.client.get_config()
+    assert "smoothing" in settings
+
+
+@restartable
+async def test_entry_of_0_1_0b2_recovers_after_a_restart(hass: HomeAssistant) -> None:
+    """An entry that kept a user token, which a restart of HyperHDR killed."""
+    async with aiohttp.ClientSession() as session:
+        client = HyperHDRClient(LIVE_HOST, LIVE_PORT, session=session)
+        await client.connect()
+        reply = await client.request("authorize", subcommand="login", password=LIVE_PASSWORD)
+        stale = reply["info"]["token"]
+        await client.close()
+    await _restart_hyperhdr(hass)
+    entry = await _setup(hass, {CONF_TOKEN: stale}, version=1)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.data == {CONF_HOST: LIVE_HOST, CONF_PORT: LIVE_PORT}
+    assert entry.runtime_data.admin
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_server_with_its_own_password(hass: HomeAssistant) -> None:
+    """No password given and the server has another one than the default: the
+    integration goes on without admin rights, and does not try again."""
+    other = "another-password"
+    async with aiohttp.ClientSession() as session:
+        client = HyperHDRClient(LIVE_HOST, LIVE_PORT, session=session)
+        await client.connect()
+        await client.login(LIVE_PASSWORD)
+        await client.request("authorize", subcommand="newPassword", password=LIVE_PASSWORD, newPassword=other)
+        await client.close()
+    try:
+        entry = MockConfigEntry(
+            domain=DOMAIN, unique_id="own-password", version=2, data={CONF_HOST: LIVE_HOST, CONF_PORT: LIVE_PORT}
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        hub = entry.runtime_data
+        assert entry.state is ConfigEntryState.LOADED
+        assert not hub.admin
+        assert hub.password is None
+        assert all(connection.client.password is None for connection in hub.instances.values())
+        assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        await hass.config_entries.async_unload(entry.entry_id)
+    finally:
+        async with aiohttp.ClientSession() as session:
+            client = HyperHDRClient(LIVE_HOST, LIVE_PORT, session=session)
+            await client.connect()
+            await client.login(other)
+            await client.request("authorize", subcommand="newPassword", password=other, newPassword=LIVE_PASSWORD)
+            await client.close()

@@ -54,8 +54,15 @@ interface offers, through the same API.
 **Admin password.** It unlocks the settings, the captured picture and the
 configuration services. Left empty, HyperHDR's default password is tried;
 without admin rights the lights, components, adjustments, sources and host
-health still work. The password is not stored: HyperHDR gives a token in
-exchange, and asks again (reauthentication) if the password changes.
+health still work. A password you give is kept in Home Assistant and sent at
+each connection; left empty, nothing is kept. HyperHDR's own login token is
+not kept: HyperHDR makes a new one each time it starts, so a token would stop
+working after every restart of the machine. A refused default password is not
+sent again (HyperHDR blocks every login after 10 refused ones); a refused
+password of yours asks for the new one (reauthentication).
+
+**Turning the machine off.** Nothing to do: the integration reconnects by
+itself when HyperHDR comes back, as often as needed.
 
 Needs HyperHDR 21 or newer, and Home Assistant 2026.8 or newer.
 

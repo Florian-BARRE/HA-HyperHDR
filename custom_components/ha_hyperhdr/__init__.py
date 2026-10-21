@@ -7,13 +7,13 @@ picture, without polling.
 
 from __future__ import annotations
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_LEGACY_TOKEN, DOMAIN
 from .entity import server_device
 from .hub import HyperHDRConfigEntry, HyperHDRHub
 from .services import async_setup_services
@@ -50,6 +50,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HyperHDRConfigEntry) -> 
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: HyperHDRConfigEntry) -> bool:
+    """1 → 2: the token is dropped (HyperHDR makes a new one each time it starts).
+
+    The password it came from was not kept: the entry tries HyperHDR's default
+    one, and asks for the password once if the server has another one.
+    """
+    if entry.version > 2:
+        return False
+    if entry.version == 1:
+        data = {key: value for key, value in entry.data.items() if key != CONF_TOKEN}
+        if entry.data.get(CONF_TOKEN):
+            data[CONF_LEGACY_TOKEN] = True
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
     return True
 
 

@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.0b3] - 2026-10-21
+
+### Fixed
+
+- After HyperHDR restarted (its machine turned off and on), the integration
+  failed to set up with "No Authorization" and asked to reconfigure. It kept
+  the login token HyperHDR gives for the admin password, but HyperHDR makes a
+  new one each time it starts. The integration now keeps no token: it logs in
+  at each connection, with the password given, else HyperHDR's default one.
+  Entries made before are moved over by themselves.
+- A refused default password is not sent again (HyperHDR blocks every login,
+  its web interface's too, after 10 refused ones): the integration goes on
+  without admin rights.
+
+### Changed
+
+- The live tests restart the real HyperHDR (`scripts/hyperhdr.sh`).
+
 ## [0.1.0b2] - 2026-10-20
 
 ### Fixed
@@ -37,5 +55,6 @@ First beta, to test from HACS ("Show beta versions").
 - Tests: unit tests, and end-to-end tests against a real HyperHDR 22 in CI.
 - Docs: HyperHDR API map and entities.
 
+[0.1.0b3]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b3
 [0.1.0b2]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b2
 [0.1.0b1]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b1

@@ -15,7 +15,7 @@ from collections.abc import Callable
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,11 +31,13 @@ from .api import (
 )
 from .const import (
     CONF_LED_INTERVAL,
+    CONF_LEGACY_TOKEN,
     CONF_PERFORMANCE,
     CONF_PRIORITY,
     CONF_STREAM_FPS,
     CONF_USE_SSL,
     DEFAULT_LED_INTERVAL,
+    DEFAULT_PASSWORD,
     DEFAULT_PRIORITY,
     DEFAULT_STREAM_FPS,
     DOMAIN,
@@ -100,7 +102,7 @@ class InstanceConnection:
             hub.host,
             hub.port,
             session=hub.session,
-            token=hub.token,
+            password=hub.password,
             instance=index,
             ssl=hub.use_ssl,
         )
@@ -125,9 +127,25 @@ class InstanceConnection:
     def primary(self) -> bool:
         return self is self.hub.primary
 
+    async def connect(self) -> None:
+        """Connects; HyperHDR's default password, when refused, is dropped.
+
+        Without a password of its own the integration tries HyperHDR's default
+        one: refused, the server simply has another one, and the integration
+        goes on without admin rights. It is not sent again: HyperHDR blocks
+        every login after 10 refused ones.
+        """
+        try:
+            await self.client.connect()
+        except HyperHDRAuthError:
+            if not self.hub.password_optional:
+                raise
+            self.hub.drop_password()
+            await self.client.connect()
+
     async def start(self) -> None:
         """First connection; raises so that the setup can retry or reauth."""
-        await self.client.connect()
+        await self.connect()
         await self._load()
 
     async def stop(self) -> None:
@@ -229,7 +247,7 @@ class InstanceConnection:
             delay = RECONNECT_DELAYS[min(attempt, len(RECONNECT_DELAYS) - 1)]
             await asyncio.sleep(delay)
             try:
-                await self.client.connect()
+                await self.connect()
                 await self._load()
             except HyperHDRAuthError:
                 _LOGGER.warning("HyperHDR %s refused the stored credentials", self.hub.host)
@@ -252,7 +270,14 @@ class HyperHDRHub:
         self.entry = entry
         self.host: str = entry.data[CONF_HOST]
         self.port: int = entry.data[CONF_PORT]
-        self.token: str | None = entry.data.get(CONF_TOKEN)
+        given = entry.data.get(CONF_PASSWORD) or None
+        #: The password sent at each connection: the one given, else
+        #: HyperHDR's default one until the server refuses it.
+        self.password: str | None = given or DEFAULT_PASSWORD
+        #: Without a password given, a refused default only means no admin
+        #: rights. An entry that kept a token (0.1.0b2 and before) may have had
+        #: a password of its own: there, a refusal asks for it once.
+        self.password_optional = not given and not entry.data.get(CONF_LEGACY_TOKEN)
         self.use_ssl: bool = entry.data.get(CONF_USE_SSL, False)
         self.session = async_get_clientsession(hass, verify_ssl=False)
         self.server = ServerState()
@@ -283,6 +308,15 @@ class HyperHDRHub:
     def led_interval(self) -> int:
         return int(self.entry.options.get(CONF_LED_INTERVAL, DEFAULT_LED_INTERVAL))
 
+    @callback
+    def drop_password(self) -> None:
+        """The default password was refused: no admin rights, and no more tries."""
+        _LOGGER.info("HyperHDR %s has its own admin password: going on without admin rights", self.host)
+        self.password = None
+        for connection in [self.primary, *self.instances.values()]:
+            if connection:
+                connection.client.password = None
+
     @property
     def admin(self) -> bool:
         return bool(self.primary and self.primary.client.admin)
@@ -297,7 +331,7 @@ class HyperHDRHub:
         primary = InstanceConnection(self, 0, "")
         self.primary = primary
         try:
-            await primary.client.connect()
+            await primary.connect()
             self.server.load_sysinfo(await primary.client.sys_info())
             await primary._load()
             if primary.client.admin:
@@ -309,6 +343,11 @@ class HyperHDRHub:
             await primary.stop()
             raise ConfigEntryNotReady(str(err)) from err
         self.instances[0] = primary
+        if self.entry.data.get(CONF_LEGACY_TOKEN):
+            # Connected without the old token: the entry needs nothing more.
+            data = {key: value for key, value in self.entry.data.items() if key != CONF_LEGACY_TOKEN}
+            self.hass.config_entries.async_update_entry(self.entry, data=data)
+            self.password_optional = not data.get(CONF_PASSWORD)
         for index, (name, running) in sorted(self.server.instances.items()):
             if index == 0:
                 primary.state.name = name

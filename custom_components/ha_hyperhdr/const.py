@@ -13,6 +13,8 @@ CONF_PERFORMANCE: Final = "performance"
 CONF_STREAM_FPS: Final = "stream_fps"
 CONF_LED_INTERVAL: Final = "led_interval"
 CONF_USE_SSL: Final = "use_ssl"
+#: Set on entries that kept a token (0.1.0b2 and before), until they connect again.
+CONF_LEGACY_TOKEN: Final = "legacy_token"
 
 DEFAULT_PRIORITY: Final = 128
 DEFAULT_STREAM_FPS: Final = 10

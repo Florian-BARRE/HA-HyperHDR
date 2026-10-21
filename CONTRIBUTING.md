@@ -9,7 +9,7 @@ custom_components/ha_hyperhdr/
   hub.py            One connection per running instance, reconnections, coordinators.
   settings.py       The HyperHDR settings exposed as entities, declared once.
   entity.py         Server and instance devices, base entities, error handling.
-  config_flow.py    Discovery (SSDP), password for a token, reauth, reconfigure, options.
+  config_flow.py    Discovery (SSDP), password (kept, never a token), reauth, reconfigure, options.
   light.py …        One file per platform.
   services.py       Configuration and backup services.
   brand/            Icon shown by Home Assistant and HACS.

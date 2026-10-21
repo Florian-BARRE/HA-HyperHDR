@@ -12,9 +12,9 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ha_hyperhdr.config_flow import AuthRequired, CannotConnect, InvalidAuth, TooOld
-from custom_components.ha_hyperhdr.const import CONF_PRIORITY, DOMAIN
+from custom_components.ha_hyperhdr.const import CONF_LEGACY_TOKEN, CONF_PRIORITY, DOMAIN
 
-RESULT = {"id": "533f43e3", "version": "22.0.0", "hostname": "pi", "token": "t" * 128}
+RESULT = {"id": "533f43e3", "version": "22.0.0", "hostname": "pi", "admin": True}
 VALIDATE = "custom_components.ha_hyperhdr.config_flow.validate"
 SETUP = "custom_components.ha_hyperhdr.async_setup_entry"
 
@@ -28,7 +28,8 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "HyperHDR pi"
-    assert result["data"] == {CONF_HOST: "192.168.1.20", CONF_PORT: 8090, CONF_TOKEN: "t" * 128}
+    # The password given is kept, never a token (HyperHDR makes a new one at each start).
+    assert result["data"] == {CONF_HOST: "192.168.1.20", CONF_PORT: 8090, CONF_PASSWORD: "secret"}
     validate.assert_called_once_with(hass, "192.168.1.20", 8090, "secret")
 
 
@@ -74,12 +75,13 @@ async def test_ssdp_flow(hass: HomeAssistant) -> None:
     with patch(VALIDATE, return_value=RESULT), patch(SETUP, return_value=True):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_HOST] == "192.168.1.30"
+    # No password given: nothing kept, the default one is tried at each connection.
+    assert result["data"] == {CONF_HOST: "192.168.1.30", CONF_PORT: 8090}
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="533f43e3", data={CONF_HOST: "h", CONF_PORT: 8090, CONF_TOKEN: "old"}
+        domain=DOMAIN, unique_id="533f43e3", data={CONF_HOST: "h", CONF_PORT: 8090, CONF_PASSWORD: "old"}
     )
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
@@ -88,7 +90,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_PASSWORD: "new"})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_TOKEN] == "t" * 128
+    assert entry.data == {CONF_HOST: "h", CONF_PORT: 8090, CONF_PASSWORD: "new"}
 
 
 async def test_options(hass: HomeAssistant) -> None:
@@ -102,3 +104,18 @@ async def test_options(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_PRIORITY] == 100
+
+
+async def test_migration_drops_the_token(hass: HomeAssistant) -> None:
+    """0.1.0b2 kept HyperHDR's user token, which dies at each HyperHDR restart."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="533f43e3",
+        version=1,
+        data={CONF_HOST: "h", CONF_PORT: 8090, CONF_TOKEN: "t" * 128},
+    )
+    entry.add_to_hass(hass)
+    with patch(SETUP, return_value=True):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.version == 2
+    assert entry.data == {CONF_HOST: "h", CONF_PORT: 8090, CONF_LEGACY_TOKEN: True}

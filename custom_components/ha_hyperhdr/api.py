@@ -52,7 +52,11 @@ class HyperHDRConnectionError(HyperHDRError):
 
 
 class HyperHDRAuthError(HyperHDRError):
-    """The token or password is refused."""
+    """The password is refused."""
+
+
+class HyperHDRBlockedError(HyperHDRConnectionError):
+    """Too many refused logins: HyperHDR refuses every login for 10 minutes."""
 
 
 class HyperHDRCommandError(HyperHDRError):
@@ -73,14 +77,16 @@ class HyperHDRClient:
         port: int = DEFAULT_PORT,
         *,
         session: aiohttp.ClientSession,
-        token: str | None = None,
+        password: str | None = None,
         instance: int = 0,
         ssl: bool = False,
     ) -> None:
         self.host = host
         self.port = port
         self.instance = instance
-        self._token = token
+        #: The admin password, sent at every connection: the token HyperHDR
+        #: gives for it changes each time HyperHDR starts, so it is not kept.
+        self.password = password
         self._session = session
         self._ssl = ssl
         self._ws: aiohttp.ClientWebSocketResponse | None = None
@@ -105,7 +111,7 @@ class HyperHDRClient:
     # ------------------------------------------------------------------ setup
 
     async def connect(self) -> None:
-        """Opens the connection, logs in and selects the instance."""
+        """Opens the connection, logs in with the password if any, selects the instance."""
         try:
             self._ws = await self._session.ws_connect(
                 self.url, heartbeat=30, max_msg_size=0, timeout=aiohttp.ClientWSTimeout(ws_close=5)
@@ -114,8 +120,9 @@ class HyperHDRClient:
             raise HyperHDRConnectionError(f"Cannot connect to {self.url}: {err}") from err
         self._reader = asyncio.create_task(self._read(), name=f"hyperhdr-{self.host}-{self.instance}")
         try:
-            if self._token:
-                await self.login(token=self._token)
+            self.admin = False
+            if self.password:
+                await self.login(self.password)
             if self.instance:
                 await self.request("instance", subcommand="switchTo", instance=self.instance)
         except BaseException:
@@ -137,25 +144,19 @@ class HyperHDRClient:
                 await reader
         self._fail_pending(HyperHDRConnectionError("Connection closed"))
 
-    async def login(self, *, token: str | None = None, password: str | None = None) -> str | None:
-        """Logs in with a token, or with the admin password (returns the user token).
+    async def login(self, password: str) -> None:
+        """Logs in with the admin password, for this connection only.
 
-        The user token HyperHDR returns for the password grants admin rights
-        when logging in with it later; it changes when the password does.
+        HyperHDR answers with a user token, but makes a new one each time it
+        starts: the password is what is kept, and sent again on reconnection.
         """
         try:
-            if password is not None:
-                reply = await self.request("authorize", subcommand="login", password=password)
-                user_token = (reply.get("info") or {}).get("token")
-                self.admin = True
-                self._token = user_token
-                return user_token
-            reply = await self.request("authorize", subcommand="login", token=token)
+            await self.request("authorize", subcommand="login", password=password)
         except HyperHDRCommandError as err:
+            if "too many" in err.error.lower():
+                raise HyperHDRBlockedError(err.error) from err
             raise HyperHDRAuthError(err.error) from err
-        # A user token (longer than an app token) gives admin rights.
-        self.admin = bool(token and len(token) > 36)
-        return token
+        self.admin = True
 
     # --------------------------------------------------------------- listeners
 
