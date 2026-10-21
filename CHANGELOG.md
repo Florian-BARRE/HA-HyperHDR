@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.0b6] - 2026-10-21
+
+### Fixed
+
+- Name prefix: entity ids are made from the English names, whatever Home
+  Assistant's language, as the README and ESPHome configurations expect. In a
+  Home Assistant in French, 0.1.0b5 made
+  `binary_sensor.salon_ambilight_hyperhdr_hub_connecte` instead of
+  `…_hub_connected`, `…_hub_temperature_du_cpu` instead of
+  `…_hub_cpu_temperature`. Entries named by 0.1.0b5 are named again, once,
+  after the update.
+
 ## [0.1.0b5] - 2026-10-21
 
 ### Added
@@ -87,6 +99,7 @@ First beta, to test from HACS ("Show beta versions").
 - Tests: unit tests, and end-to-end tests against a real HyperHDR 22 in CI.
 - Docs: HyperHDR API map and entities.
 
+[0.1.0b6]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b6
 [0.1.0b5]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b5
 [0.1.0b4]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b4
 [0.1.0b3]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b3

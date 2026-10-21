@@ -152,7 +152,8 @@ way at once, set **Name prefix** in the options. With
 Hyphens part the levels, underscores join the words of a strip's name (its
 HyperHDR instance name: rename the instance in HyperHDR to change it). Entity
 ids can hold neither hyphens nor accents, Home Assistant makes them `_` and
-plain letters. Saving the prefix renames the devices, dropping names typed by
+plain letters. They come from the English names of the entities, whatever
+Home Assistant's language. Saving the prefix renames the devices, dropping names typed by
 hand on them, and recreates the entity ids from the device and entity names,
 without the area. Automations, scripts, dashboards and ESPHome configurations
 that use the old ids must be updated.
