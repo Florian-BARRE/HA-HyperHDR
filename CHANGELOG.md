@@ -4,6 +4,35 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.0] - 2026-10-21
+
+First release, after seven betas tested against a real HyperHDR 22 and a
+Raspberry Pi.
+
+### Added
+
+- Setup with network discovery (SSDP), the admin password optional
+  (HyperHDR's default one is tried), reauthentication, reconfiguration and
+  options.
+- One WebSocket per instance, kept open: HyperHDR pushes every change;
+  only the host health is asked for, every 30 s. Reconnects by itself, also
+  after HyperHDR or its machine restarts (no login token kept).
+- A server device: connection, undervoltage, CPU, CPU temperature, memory,
+  capture rate, grabber, video mode, version, the captured picture (on
+  demand), grabber and crop settings, signal detection.
+- A device per instance: the light (on/off, colors and effects above the
+  capture), components, source, color adjustments, smoothing and black
+  border settings, visible source, rates, LED count, LED device and its
+  address, LED colors camera, clear buttons.
+- Power off and restart the machine cleanly over SSH (nothing installed on
+  it), from the options.
+- Name prefix: devices named `<prefix>-hub` and `<prefix>-<strip>`, entity
+  ids made again from the English names.
+- Services `set_color`, `set_effect`, `clear`, `get_config`, `set_config`,
+  `backup`; English and French; diagnostics.
+- Tests: unit tests, and end-to-end tests in CI against a real HyperHDR
+  (restarts included) and a real OpenSSH with sudo.
+
 ## [0.1.0b7] - 2026-10-21
 
 ### Added
@@ -107,6 +136,7 @@ First beta, to test from HACS ("Show beta versions").
 - Tests: unit tests, and end-to-end tests against a real HyperHDR 22 in CI.
 - Docs: HyperHDR API map and entities.
 
+[0.1.0]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0
 [0.1.0b7]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b7
 [0.1.0b6]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b6
 [0.1.0b5]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b5
