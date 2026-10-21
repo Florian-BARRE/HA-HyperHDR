@@ -461,3 +461,47 @@ async def test_name_prefix_renames_devices_and_entity_ids(hass: HomeAssistant) -
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert (await _names(hass, entry))[1] == before
+
+
+async def test_name_prefix_ids_in_english_for_a_french_home_assistant(hass: HomeAssistant) -> None:
+    """Names in French, entity ids in English, as Home Assistant makes them.
+
+    Entities registered before Home Assistant had `object_id_base` got their
+    `original_name` copied into it, in Home Assistant's language: it must not
+    make the ids (0.1.0b5 made `…_hub_connecte`, `…_hub_temperature_du_cpu`).
+    """
+    import attr
+
+    hass.config.language = "fr"
+    entry = await _setup(hass)
+    registry = er.async_get(hass)
+    connected = next(
+        item
+        for item in er.async_entries_for_config_entry(registry, entry.entry_id)
+        if item.translation_key == "connected"
+    )
+    assert connected.original_name == "Connecté"
+    # As Home Assistant's registry migration 1.20 left older entities.
+    for item in er.async_entries_for_config_entry(registry, entry.entry_id):
+        registry.entities[item.entity_id] = attr.evolve(item, object_id_base=item.original_name)
+
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "name_prefix": "salon-ambilight-hyperhdr"})
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    _, ids = await _names(hass, entry)
+    assert "binary_sensor.salon_ambilight_hyperhdr_hub_connected" in ids
+    assert "sensor.salon_ambilight_hyperhdr_hub_cpu_temperature" in ids
+    assert not any(entity_id.endswith("_connecte") or "temperature_du" in entity_id for entity_id in ids)
+
+    # An entry named by 0.1.0b5 (French ids) is named again, once, after the update.
+    registry.async_update_entity(
+        "binary_sensor.salon_ambilight_hyperhdr_hub_connected",
+        new_entity_id="binary_sensor.salon_ambilight_hyperhdr_hub_connecte",
+    )
+    data = {key: value for key, value in entry.data.items() if key != "applied_naming"}
+    hass.config_entries.async_update_entry(entry, data=data)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    _, ids = await _names(hass, entry)
+    assert "binary_sensor.salon_ambilight_hyperhdr_hub_connected" in ids
+    assert entry.data["applied_naming"] == 2

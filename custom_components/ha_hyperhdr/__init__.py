@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HyperHDRConfigEntry) -> 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # The entities are registered: new names, then their entity ids.
-    async_apply_names(hass, entry)
+    await async_apply_names(hass, entry)
     return True
 
 
