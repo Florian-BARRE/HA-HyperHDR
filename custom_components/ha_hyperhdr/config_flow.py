@@ -28,6 +28,7 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from .api import DEFAULT_PORT, HyperHDRAuthError, HyperHDRClient, HyperHDRCommandError, HyperHDRError
 from .const import (
     CONF_LED_INTERVAL,
+    CONF_NAME_PREFIX,
     CONF_PERFORMANCE,
     CONF_PRIORITY,
     CONF_SSH_HOST_KEY,
@@ -299,11 +300,18 @@ class HyperHDROptionsFlow(OptionsFlowWithReload):
                     for key, value in values.items()
                     if key not in SSH_FIELDS
                 }
+                prefix = str(data.pop(CONF_NAME_PREFIX, "") or "").strip()
+                if prefix:
+                    data[CONF_NAME_PREFIX] = prefix
                 return self.async_create_entry(data={**data, **ssh})
         current = user_input or {}
         ssh_current = current.get("ssh") or {}
         schema = vol.Schema(
             {
+                vol.Optional(
+                    CONF_NAME_PREFIX,
+                    description={"suggested_value": current.get(CONF_NAME_PREFIX, options.get(CONF_NAME_PREFIX))},
+                ): TextSelector(),
                 vol.Required(CONF_PRIORITY, default=options.get(CONF_PRIORITY, DEFAULT_PRIORITY)): NumberSelector(
                     NumberSelectorConfig(min=1, max=253, step=1, mode=NumberSelectorMode.BOX)
                 ),

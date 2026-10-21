@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_LEGACY_TOKEN, DOMAIN
 from .entity import server_device
 from .hub import HyperHDRConfigEntry, HyperHDRHub
+from .naming import async_apply_names
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
@@ -50,6 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HyperHDRConfigEntry) -> 
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # The entities are registered: new names, then their entity ids.
+    async_apply_names(hass, entry)
     return True
 
 

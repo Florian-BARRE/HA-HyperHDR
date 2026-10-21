@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .api import HyperHDRCommandError, HyperHDRError
 from .const import DOMAIN, MANUFACTURER
 from .hub import HyperHDRHub, InstanceConnection
+from .naming import hub_name, name_prefix, strip_name
 from .state import InstanceState, ServerState
 
 
@@ -22,7 +23,7 @@ def server_device(hub: HyperHDRHub) -> DeviceInfo:
     scheme = "https" if hub.use_ssl else "http"
     return DeviceInfo(
         identifiers={(DOMAIN, hub.server_id)},
-        name=f"HyperHDR {server.hostname}".strip() if server.hostname else "HyperHDR",
+        name=hub_name(name_prefix(hub.entry), f"HyperHDR {server.hostname}".strip() if server.hostname else "HyperHDR"),
         manufacturer=MANUFACTURER,
         model=str(server.system.get("cpuModelName") or server.system.get("architecture") or "HyperHDR"),
         sw_version=server.version or None,
@@ -31,7 +32,7 @@ def server_device(hub: HyperHDRHub) -> DeviceInfo:
 
 
 def instance_device(hub: HyperHDRHub, connection: InstanceConnection) -> DeviceInfo:
-    name = connection.state.name or f"Instance {connection.index}"
+    name = strip_name(name_prefix(hub.entry), connection.state.name or f"Instance {connection.index}")
     return DeviceInfo(
         identifiers={(DOMAIN, f"{hub.server_id}_{connection.index}")},
         name=name,
