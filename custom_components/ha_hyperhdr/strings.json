@@ -69,7 +69,7 @@
           "led_interval": "LED colors refresh"
         },
         "data_description": {
-          "name_prefix": "For example salon-ambilight-hyperhdr: the server becomes salon-ambilight-hyperhdr-hub, each strip salon-ambilight-hyperhdr-<its HyperHDR name, spaces as _>. Saving it renames the devices and recreates the entity ids (automations using the old ids must be updated). Empty: HyperHDR's names",
+          "name_prefix": "For example salon-ambilight-hyperhdr: the server becomes salon-ambilight-hyperhdr-hub, each strip salon-ambilight-hyperhdr- followed by its HyperHDR name, spaces as _. Saving it renames the devices and recreates the entity ids (automations using the old ids must be updated). Empty: HyperHDR's names",
           "priority": "Colors and effects set from Home Assistant use it; lower wins (the capture is 240)",
           "performance": "CPU, temperature, memory and undervoltage every 30 s; fps every minute",
           "stream_fps": "While the camera is viewed",
