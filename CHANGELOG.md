@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.0b7] - 2026-10-21
+
+### Added
+
+- LED device sensor on each instance (_admin_): the device type HyperHDR
+  drives (`wled`, `adalight`…), with its address (host or serial port) and
+  refresh time as attributes.
+
 ## [0.1.0b6] - 2026-10-21
 
 ### Fixed
@@ -99,6 +107,7 @@ First beta, to test from HACS ("Show beta versions").
 - Tests: unit tests, and end-to-end tests against a real HyperHDR 22 in CI.
 - Docs: HyperHDR API map and entities.
 
+[0.1.0b7]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b7
 [0.1.0b6]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b6
 [0.1.0b5]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b5
 [0.1.0b4]: https://github.com/Florian-BARRE/HA-HyperHDR/releases/tag/v0.1.0b4

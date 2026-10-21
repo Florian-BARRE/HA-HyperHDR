@@ -505,3 +505,19 @@ async def test_name_prefix_ids_in_english_for_a_french_home_assistant(hass: Home
     _, ids = await _names(hass, entry)
     assert "binary_sensor.salon_ambilight_hyperhdr_hub_connected" in ids
     assert entry.data["applied_naming"] == 2
+
+
+async def test_led_device_sensor(hass: HomeAssistant) -> None:
+    """Which LED device each instance drives, from its settings (admin)."""
+    entry = await _setup(hass)
+    registry = er.async_get(hass)
+    item = next(
+        entry_
+        for entry_ in er.async_entries_for_config_entry(registry, entry.entry_id)
+        if entry_.translation_key == "led_device"
+    )
+    state = hass.states.get(item.entity_id)
+    device = entry.runtime_data.instances[0].state.settings.get("device", {})
+    assert state is not None
+    assert state.state == device.get("type")
+    assert "address" in state.attributes

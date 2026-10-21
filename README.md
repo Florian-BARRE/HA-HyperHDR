@@ -120,6 +120,7 @@ marked _off_ are disabled by default; _admin_ ones need the admin password.
 | Continuous output, Anti-flickering filter, Background effect, Boot effect, Automatic tone mapping | switches | _admin_ |
 | Visible source                              | sensor   | What drives the LEDs now, with every source as attributes   |
 | Output rate, LEDs                           | sensors  |                                                             |
+| LED device                                  | sensor   | _admin_, type (`wled`…) with its address and refresh time   |
 | LED rate                                    | sensor   | _off_                                                       |
 | Average color                               | sensor   | _off_, read every 15 s while enabled (HyperHDR does not push it) |
 | Give back to capture                        | button   | Clears the integration's color or effect                    |
