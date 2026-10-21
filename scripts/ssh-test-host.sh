@@ -14,11 +14,16 @@ echo "$user:$password" | chpasswd
 usermod -aG sudo "$user"
 
 # First in sudo's secure_path: stands in for the real systemctl.
+# Anything else (session scripts call systemctl too) goes to the real one.
 cat > /usr/local/sbin/systemctl <<SCRIPT
 #!/bin/sh
-echo "\$*" >> "$log"
-chmod 666 "$log"
-case "\$1" in poweroff|reboot) pkill -KILL -u "$user" ;; esac
+case "\$1" in
+  poweroff|reboot)
+    echo "\$1" >> "$log"
+    pkill -KILL -u "$user"
+    ;;
+  *) exec /usr/bin/systemctl "\$@" ;;
+esac
 SCRIPT
 chmod 755 /usr/local/sbin/systemctl
 : > "$log"
