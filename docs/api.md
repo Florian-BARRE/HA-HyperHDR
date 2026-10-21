@@ -114,5 +114,10 @@ so a camera entity can relay it as it comes, without decoding.
 
 Local API authentication can be turned on. A client logs in with the admin
 password or uses a token (`authorize` / `createToken`); configuration and
-backups need admin rights. The integration will ask for the password once,
-create its own token and keep only the token.
+backups need admin rights. The token HyperHDR returns for the password (the
+user token, longer than 36 characters) is made again each time HyperHDR
+starts (`AccessManager`: "update HyperHDR user token on startup"), so it is
+only good until the next restart; app tokens (36 characters) last but give no
+admin rights. The integration therefore keeps the password, not a token, and
+logs in at each connection. Ten refused logins (password or user token) in 10
+minutes block every login, the web interface's too, for 10 minutes.
